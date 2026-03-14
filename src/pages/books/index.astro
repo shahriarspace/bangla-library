@@ -1,0 +1,92 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const books = await getCollection('books');
+const base = import.meta.env.BASE_URL;
+
+const categories = [...new Set(books.map(b => b.data.category))];
+---
+
+<Base title="All Books" description="Browse all classical Bangla books with English translations.">
+  <main style="padding: 60px 24px;">
+    <div class="container">
+
+      <div style="text-align:center;margin-bottom:48px;">
+        <h1 style="font-size:2rem;color:var(--gold-light);font-weight:400;margin-bottom:8px;">সকল বই · All Books</h1>
+        <p style="color:var(--text-dim);font-size:0.9rem;">{books.length} books available</p>
+      </div>
+
+      <!-- Filter by category -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:40px;justify-content:center;">
+        <button onclick="filterBooks('all')" id="filter-all"
+          style="padding:6px 16px;border:1px solid rgba(200,160,80,0.4);background:rgba(200,160,80,0.15);color:var(--gold-light);border-radius:2px;cursor:pointer;font-size:0.78rem;letter-spacing:0.08em;font-family:Georgia,serif;">
+          All
+        </button>
+        {categories.map(cat => (
+          <button onclick={`filterBooks('${cat}')`} id={`filter-${cat}`}
+            style="padding:6px 16px;border:1px solid var(--border);background:transparent;color:var(--gold-dim);border-radius:2px;cursor:pointer;font-size:0.78rem;letter-spacing:0.08em;font-family:Georgia,serif;">
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      <!-- Book grid -->
+      <div id="book-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+        {books.map(book => (
+          <a
+            href={`${base}/books/${book.id}`}
+            class="book-card"
+            data-category={book.data.category}
+            style="display:block;padding:24px;border:1px solid var(--border);background:rgba(255,255,255,0.02);transition:all 0.25s;text-decoration:none;"
+          >
+            <div style="font-size:1.25rem;font-family:var(--font-bn);color:var(--gold-light);margin-bottom:4px;">{book.data.title_bn}</div>
+            <div style="font-size:0.88rem;color:var(--gold);margin-bottom:10px;font-style:italic;">{book.data.title_en}</div>
+            <div style="font-size:0.75rem;color:var(--text-dim);">
+              {book.data.author_en} · {book.data.year}
+            </div>
+            <div style="margin-top:8px;display:inline-block;padding:2px 8px;border:1px solid var(--border);font-size:0.65rem;letter-spacing:0.1em;color:var(--gold-dim);text-transform:uppercase;">
+              {book.data.category}
+            </div>
+            <div style="margin-top:14px;font-size:0.72rem;letter-spacing:0.08em;color:var(--gold-dim);">
+              {book.data.paragraphs.length} passages · Read →
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </main>
+</Base>
+
+<style>
+  .book-card:hover {
+    border-color: rgba(200,160,80,0.4) !important;
+    background: rgba(200,160,80,0.04) !important;
+  }
+</style>
+
+<script>
+  function filterBooks(category) {
+    const cards = document.querySelectorAll('.book-card');
+    cards.forEach(card => {
+      if (category === 'all' || card.dataset.category === category) {
+        card.style.display = 'block';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+    // Update button states
+    document.querySelectorAll('[id^="filter-"]').forEach(btn => {
+      btn.style.background = 'transparent';
+      btn.style.borderColor = 'rgba(200,160,80,0.15)';
+      btn.style.color = '#a08050';
+    });
+    const active = document.getElementById(`filter-${category}`);
+    if (active) {
+      active.style.background = 'rgba(200,160,80,0.15)';
+      active.style.borderColor = 'rgba(200,160,80,0.4)';
+      active.style.color = '#f0dfa0';
+    }
+  }
+  window.filterBooks = filterBooks;
+</script>

@@ -1,0 +1,53 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const books = await getCollection('books');
+const base = import.meta.env.BASE_URL;
+
+// Group by author
+const byAuthor = books.reduce((acc, book) => {
+  const key = book.data.author_en;
+  if (!acc[key]) {
+    acc[key] = {
+      author_en: book.data.author_en,
+      author_bn: book.data.author_bn,
+      slug: book.data.author_en.toLowerCase().replace(/ /g, '-'),
+      books: [],
+    };
+  }
+  acc[key].books.push(book);
+  return acc;
+}, {} as Record<string, any>);
+---
+
+<Base title="Authors" description="Browse classical Bangla authors and their works.">
+  <main style="padding: 60px 24px;">
+    <div class="container">
+      <div style="text-align:center;margin-bottom:48px;">
+        <h1 style="font-size:2rem;color:var(--gold-light);font-weight:400;margin-bottom:8px;">লেখকগণ · Authors</h1>
+        <p style="color:var(--text-dim);font-size:0.9rem;">{Object.keys(byAuthor).length} authors</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;">
+        {Object.values(byAuthor).map(author => (
+          <div style="padding:28px;border:1px solid var(--border);background:rgba(255,255,255,0.02);">
+            <div style="font-size:1.3rem;font-family:var(--font-bn);color:var(--gold-light);margin-bottom:4px;">{author.author_bn}</div>
+            <div style="font-size:1rem;color:var(--gold);margin-bottom:16px;">{author.author_en}</div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              {author.books.map(book => (
+                <a href={`${base}/books/${book.id}`} style="font-size:0.82rem;color:var(--text-dim);display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(200,160,80,0.08);">
+                  <span>{book.data.title_en}</span>
+                  <span style="color:var(--gold-dim);font-size:0.72rem;">{book.data.year}</span>
+                </a>
+              ))}
+            </div>
+            <div style="margin-top:14px;font-size:0.72rem;color:var(--gold-dim);">
+              {author.books.length} {author.books.length === 1 ? 'book' : 'books'} in library
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </main>
+</Base>

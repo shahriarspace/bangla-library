@@ -1,0 +1,116 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+}
+const { title, description = 'A bilingual digital library of classical Bangla literature with English translations.', ogImage } = Astro.props;
+const base = import.meta.env.BASE_URL;
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title} · বাংলা পাঠাগার</title>
+  <meta name="description" content={description} />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  {ogImage && <meta property="og:image" content={ogImage} />}
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Serif+Bengali:wght@400;600&display=swap" rel="stylesheet" />
+  <!-- Pagefind search UI (generated after build) -->
+  <link href={`${base}/pagefind/pagefind-ui.css`} rel="stylesheet" />
+  <script src={`${base}/pagefind/pagefind-ui.js`} is:inline></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #12100e;
+      --bg2: #1c1812;
+      --gold: #c8a050;
+      --gold-light: #f0dfa0;
+      --gold-dim: #a08050;
+      --text: #d4b87a;
+      --text-dim: #8a7050;
+      --border: rgba(200,160,80,0.15);
+      --font-en: 'Lora', Georgia, serif;
+      --font-bn: 'Noto Serif Bengali', serif;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-en);
+      min-height: 100vh;
+      line-height: 1.7;
+    }
+    a { color: var(--gold); text-decoration: none; }
+    a:hover { color: var(--gold-light); }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    /* NAV */
+    nav {
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(18,16,14,0.95);
+      backdrop-filter: blur(8px);
+    }
+    .nav-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+    }
+    .nav-brand {
+      font-size: 1.1rem; font-weight: 600; color: var(--gold-light);
+      letter-spacing: 0.02em;
+    }
+    .nav-brand span { font-family: var(--font-bn); font-size: 1rem; opacity: 0.7; margin-left: 8px; }
+    .nav-links { display: flex; gap: 28px; font-size: 0.85rem; letter-spacing: 0.05em; }
+    .nav-links a { color: var(--gold-dim); }
+    .nav-links a:hover { color: var(--gold-light); }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 24px;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      letter-spacing: 0.05em;
+    }
+
+    /* SEARCH */
+    #search { margin: 0 auto; max-width: 600px; }
+    .pagefind-ui__search-input {
+      background: var(--bg2) !important;
+      border: 1px solid var(--border) !important;
+      color: var(--text) !important;
+      border-radius: 2px !important;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-inner">
+      <a href={base || '/'} class="nav-brand">
+        বাংলা পাঠাগার <span>Bangla Library</span>
+      </a>
+      <div class="nav-links">
+        <a href={`${base}/books`}>Books</a>
+        <a href={`${base}/authors`}>Authors</a>
+        <a href={`${base}/about`}>About</a>
+      </div>
+    </div>
+  </nav>
+
+  <slot />
+
+  <footer>
+    <div>বাংলা পাঠাগার · Bangla Library — A free bilingual digital library of classical Bengali literature</div>
+    <div style="margin-top:8px; opacity:0.6;">All texts are in the public domain · Built with Astro + React</div>
+  </footer>
+</body>
+</html>

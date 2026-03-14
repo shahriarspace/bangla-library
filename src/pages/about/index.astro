@@ -1,0 +1,56 @@
+---
+import Base from '../../layouts/Base.astro';
+---
+
+<Base title="About" description="About Bangla Library — a free bilingual digital library of classical Bengali literature.">
+  <main style="padding: 60px 24px;">
+    <div class="container" style="max-width:700px;margin:0 auto;">
+
+      <h1 style="font-size:2rem;color:var(--gold-light);font-weight:400;margin-bottom:8px;">সম্পর্কে · About</h1>
+      <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:20px 0 36px;"></div>
+
+      <div style="display:flex;flex-direction:column;gap:24px;font-size:0.95rem;line-height:1.9;color:var(--text-dim);">
+
+        <p>
+          <strong style="color:var(--gold-light);">বাংলা পাঠাগার (Bangla Library)</strong> is a free, open digital library dedicated to classical Bengali literature. Every book is presented in its original Bangla alongside an English translation — side by side, fully synchronized.
+        </p>
+
+        <p>
+          Our mission is to make the rich literary heritage of Bengal accessible to the global Bengali diaspora, language learners, researchers, and anyone curious about one of the world's great literary traditions.
+        </p>
+
+        <h2 style="font-size:1rem;color:var(--gold);font-weight:600;letter-spacing:0.08em;margin-top:8px;">What we offer</h2>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;">
+          {[
+            'Parallel bilingual reading — Bangla original and English translation, side by side',
+            'Synchronized scrolling — both columns move together as you read',
+            'Full-text search across all books in both languages',
+            'Works from the public domain — poetry, novels, essays, and more',
+            'Mobile-friendly reading experience',
+          ].map(item => (
+            <li style="display:flex;gap:12px;align-items:flex-start;">
+              <span style="color:var(--gold);margin-top:4px;">·</span>
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+
+        <h2 style="font-size:1rem;color:var(--gold);font-weight:600;letter-spacing:0.08em;margin-top:8px;">Copyright</h2>
+        <p>
+          All texts in this library are in the public domain. Works published before 1926 are generally free from copyright restrictions worldwide. We do not host any copyrighted material.
+        </p>
+
+        <h2 style="font-size:1rem;color:var(--gold);font-weight:600;letter-spacing:0.08em;margin-top:8px;">Contributing</h2>
+        <p>
+          This library is open source. If you'd like to contribute a book, improve a translation, or report an error, please open an issue or pull request on GitHub.
+        </p>
+
+        <h2 style="font-size:1rem;color:var(--gold);font-weight:600;letter-spacing:0.08em;margin-top:8px;">Technology</h2>
+        <p>
+          Built with <a href="https://astro.build">Astro</a> (static site generation), React (bilingual reader island), and <a href="https://pagefind.app">Pagefind</a> (full-text search). Hosted on GitHub Pages.
+        </p>
+
+      </div>
+    </div>
+  </main>
+</Base>

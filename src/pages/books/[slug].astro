@@ -1,0 +1,80 @@
+---
+import Base from '../../layouts/Base.astro';
+import BilingualReader from '../../components/BilingualReader.jsx';
+import { getCollection, getEntry } from 'astro:content';
+
+export async function getStaticPaths() {
+  const books = await getCollection('books');
+  return books.map(book => ({ params: { slug: book.id } }));
+}
+
+const { slug } = Astro.params;
+const entry = await getEntry('books', slug);
+const book = entry.data;
+const base = import.meta.env.BASE_URL;
+---
+
+<Base
+  title={`${book.title_en} · ${book.title_bn}`}
+  description={book.description_en || `Read ${book.title_en} by ${book.author_en} in Bangla and English.`}
+>
+  <main>
+
+    <!-- Book header -->
+    <section style="padding: 56px 24px 40px; border-bottom: 1px solid var(--border); text-align:center; position:relative; overflow:hidden;">
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center top, rgba(200,160,80,0.05) 0%, transparent 65%);pointer-events:none;"></div>
+      <div style="font-size:0.68rem;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:16px;">
+        <a href={`${base}/books`} style="color:var(--gold-dim);">Library</a>
+        <span style="margin:0 8px;opacity:0.4;">·</span>
+        {book.category}
+      </div>
+      <h1 style="font-family:var(--font-bn);font-size:clamp(1.8rem,4vw,3rem);color:var(--gold-light);font-weight:600;margin-bottom:8px;">
+        {book.title_bn}
+      </h1>
+      <h2 style="font-size:clamp(1rem,2vw,1.4rem);color:var(--gold);font-weight:400;font-style:italic;margin-bottom:20px;">
+        {book.title_en}
+      </h2>
+      <div style="font-size:0.85rem;color:var(--text-dim);margin-bottom:8px;">
+        <a href={`${base}/authors/${encodeURIComponent(book.author_en.toLowerCase().replace(/ /g,'-'))}`} style="color:var(--gold-dim);">
+          {book.author_bn} · {book.author_en}
+        </a>
+        <span style="margin:0 10px;opacity:0.3;">·</span>
+        {book.year}
+      </div>
+      {book.description_en && (
+        <p style="max-width:600px;margin:20px auto 0;font-size:0.88rem;color:var(--text-dim);line-height:1.8;">
+          {book.description_en}
+        </p>
+      )}
+      <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:28px auto 0;"></div>
+    </section>
+
+    <!-- SEO-visible text (hidden visually, fully crawlable by Google) -->
+    <!-- The actual reader is the React island below, but this ensures indexing -->
+    <div style="display:none;" aria-hidden="true" data-pagefind-body>
+      {book.paragraphs.map(p => (
+        <div>
+          <p lang="bn">{p.bn}</p>
+          <p lang="en">{p.en}</p>
+        </div>
+      ))}
+    </div>
+
+    <!-- Bilingual Reader (React Island) -->
+    <section style="padding: 40px 24px 60px;">
+      <div class="container">
+        <BilingualReader client:load book={book} base={base} />
+      </div>
+    </section>
+
+    <!-- Related / nav -->
+    <section style="padding: 0 24px 60px;">
+      <div class="container" style="text-align:center;">
+        <a href={`${base}/books`} style="font-size:0.8rem;letter-spacing:0.12em;color:var(--gold-dim);text-transform:uppercase;">
+          ← Back to Library
+        </a>
+      </div>
+    </section>
+
+  </main>
+</Base>
