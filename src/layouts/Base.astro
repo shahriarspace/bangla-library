@@ -326,9 +326,50 @@ const canonicalUrl = canonicalPath ? `${siteUrl}${canonicalPath}` : `${siteUrl}$
       letter-spacing: 0.02em;
     }
     .nav-brand span { font-family: var(--font-bn); font-size: 1rem; opacity: 0.7; margin-left: 8px; }
-    .nav-links { display: flex; gap: 20px; font-size: 0.85rem; letter-spacing: 0.05em; align-items: center; }
-    .nav-links a { color: var(--gold-dim); }
+    .nav-links {
+      display: flex; gap: 20px; font-size: 0.85rem; letter-spacing: 0.05em; align-items: center;
+    }
+    .nav-links a {
+      color: var(--gold-dim);
+      padding: 10px 4px;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+    }
     .nav-links a:hover { color: var(--gold-light); }
+
+    /* HAMBURGER TOGGLE (hidden on desktop) */
+    .nav-toggle {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      width: 44px;
+      height: 44px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 10px;
+      z-index: 101;
+    }
+    .nav-toggle__bar {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--gold);
+      border-radius: 2px;
+      transition: transform 0.25s ease, opacity 0.25s ease;
+    }
+    .nav-toggle[aria-expanded="true"] .nav-toggle__bar:nth-child(1) {
+      transform: translateY(7px) rotate(45deg);
+    }
+    .nav-toggle[aria-expanded="true"] .nav-toggle__bar:nth-child(2) {
+      opacity: 0;
+    }
+    .nav-toggle[aria-expanded="true"] .nav-toggle__bar:nth-child(3) {
+      transform: translateY(-7px) rotate(-45deg);
+    }
 
     /* THEME SWITCHER */
     .theme-switcher {
@@ -344,6 +385,13 @@ const canonicalUrl = canonicalPath ? `${siteUrl}${canonicalPath}` : `${siteUrl}$
       cursor: pointer;
       transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
       position: relative;
+      /* Expand touch target via pseudo-element */
+    }
+    .theme-dot::before {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
     }
     .theme-dot:hover {
       transform: scale(1.2);
@@ -371,6 +419,25 @@ const canonicalUrl = canonicalPath ? `${siteUrl}${canonicalPath}` : `${siteUrl}$
       letter-spacing: 0.05em;
       transition: border-color 0.3s ease, color 0.3s ease;
     }
+    .footer-nav {
+      margin-top: 12px;
+      font-size: 0.8rem;
+      opacity: 0.5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .footer-nav a {
+      padding: 8px 6px;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .footer-sep {
+      opacity: 0.4;
+    }
 
     /* SEARCH */
     #search { margin: 0 auto; max-width: 600px; }
@@ -381,11 +448,69 @@ const canonicalUrl = canonicalPath ? `${siteUrl}${canonicalPath}` : `${siteUrl}$
       border-radius: 2px !important;
     }
 
-    /* Responsive: collapse theme dots on small screens */
-    @media (max-width: 600px) {
-      .nav-links { gap: 14px; }
-      .theme-switcher { padding-left: 10px; gap: 4px; }
-      .theme-dot { width: 14px; height: 14px; }
+    /* ======================================================== 
+       RESPONSIVE BREAKPOINTS
+       ======================================================== */
+
+    /* Tablets and large phones */
+    @media (max-width: 768px) {
+      .nav-toggle {
+        display: flex;
+      }
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 60px;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        background: var(--bg-nav);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border);
+        padding: 16px 24px 20px;
+        gap: 4px;
+        z-index: 99;
+      }
+      .nav-links.nav-open {
+        display: flex;
+      }
+      .nav-links a {
+        padding: 12px 8px;
+        font-size: 0.95rem;
+        width: 100%;
+        border-radius: 6px;
+      }
+      .nav-links a:hover {
+        background: var(--highlight);
+      }
+      .theme-switcher {
+        margin-left: 0;
+        padding-left: 0;
+        border-left: none;
+        padding-top: 12px;
+        margin-top: 8px;
+        border-top: 1px solid var(--border);
+        justify-content: center;
+        gap: 10px;
+      }
+      .theme-dot {
+        width: 28px;
+        height: 28px;
+      }
+      .container { padding: 0 16px; }
+      footer { padding: 32px 16px; }
+    }
+
+    /* Small phones */
+    @media (max-width: 480px) {
+      nav { padding: 0 16px; }
+      .nav-brand span { display: none; }
+      .nav-links { padding: 12px 16px 16px; }
+      .theme-dot {
+        width: 32px;
+        height: 32px;
+      }
+      .theme-switcher { gap: 8px; }
     }
   </style>
 </head>
@@ -395,7 +520,13 @@ const canonicalUrl = canonicalPath ? `${siteUrl}${canonicalPath}` : `${siteUrl}$
       <a href={base || '/'} class="nav-brand">
         বাংলা পাঠাগার <span>Bangla Library</span>
       </a>
-      <div class="nav-links">
+      <!-- Hamburger toggle (mobile only) -->
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+        <span class="nav-toggle__bar"></span>
+        <span class="nav-toggle__bar"></span>
+        <span class="nav-toggle__bar"></span>
+      </button>
+      <div class="nav-links" id="nav-links">
         <a href={`${base}/books`}>Books</a>
         <a href={`${base}/authors`}>Authors</a>
         <a href={`${base}/about`}>About</a>
@@ -417,15 +548,18 @@ const canonicalUrl = canonicalPath ? `${siteUrl}${canonicalPath}` : `${siteUrl}$
   <footer>
     <div>বাংলা পাঠাগার · <strong>Bangla Library</strong> — A free bilingual digital library of classical Bengali literature</div>
     <div style="margin-top:8px; opacity:0.6;">All texts are in the public domain · Built with <a href="https://astro.build" rel="noopener">Astro</a> + <a href="https://react.dev" rel="noopener">React</a></div>
-    <nav style="margin-top:12px; font-size:0.75rem; opacity:0.5;" aria-label="Footer navigation">
-      <a href={base || '/'}>Home</a> ·
-      <a href={`${base}/books`}>Books</a> ·
-      <a href={`${base}/authors`}>Authors</a> ·
+    <nav class="footer-nav" aria-label="Footer navigation">
+      <a href={base || '/'}>Home</a>
+      <span class="footer-sep">&middot;</span>
+      <a href={`${base}/books`}>Books</a>
+      <span class="footer-sep">&middot;</span>
+      <a href={`${base}/authors`}>Authors</a>
+      <span class="footer-sep">&middot;</span>
       <a href={`${base}/about`}>About</a>
     </nav>
   </footer>
 
-  <!-- Theme switcher logic -->
+  <!-- Theme switcher + hamburger menu logic -->
   <script is:inline>
     (function(){
       var STORAGE_KEY = 'bl-theme';
@@ -448,6 +582,30 @@ const canonicalUrl = canonicalPath ? `${siteUrl}${canonicalPath}` : `${siteUrl}$
           setTheme(d.getAttribute('data-theme-id'));
         });
       });
+
+      // Hamburger menu toggle
+      var toggle = document.getElementById('nav-toggle');
+      var links = document.getElementById('nav-links');
+      if (toggle && links) {
+        toggle.addEventListener('click', function() {
+          var open = links.classList.toggle('nav-open');
+          toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+        // Close menu when clicking a nav link
+        links.querySelectorAll('a').forEach(function(a) {
+          a.addEventListener('click', function() {
+            links.classList.remove('nav-open');
+            toggle.setAttribute('aria-expanded', 'false');
+          });
+        });
+        // Close menu when clicking outside
+        document.addEventListener('click', function(e) {
+          if (!toggle.contains(e.target) && !links.contains(e.target)) {
+            links.classList.remove('nav-open');
+            toggle.setAttribute('aria-expanded', 'false');
+          }
+        });
+      }
     })();
   </script>
 </body>

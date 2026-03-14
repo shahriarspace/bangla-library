@@ -36,7 +36,7 @@ const jsonLd = {
 >
   <main>
     <!-- Hero -->
-    <section style="padding: 80px 24px 60px; text-align: center; border-bottom: 1px solid var(--border); position: relative; overflow: hidden;">
+    <section class="hero-section">
       <div class="hero-glow"></div>
       <div style="font-size:0.7rem;letter-spacing:0.35em;color:var(--gold);text-transform:uppercase;margin-bottom:20px;opacity:0.8;">
         Free · Bilingual · Classical
@@ -70,7 +70,7 @@ const jsonLd = {
     </section>
 
     <!-- Stats bar -->
-    <section style="border-bottom:1px solid var(--border);padding:24px;">
+    <section class="stats-section">
       <div class="container" style="display:flex;gap:40px;justify-content:center;flex-wrap:wrap;">
         {[
           ['বই', 'Books', books.length],
@@ -86,15 +86,15 @@ const jsonLd = {
     </section>
 
     <!-- Books by category -->
-    <section style="padding:60px 24px;">
+    <section class="books-section">
       <div class="container">
         {Object.entries(byCategory).map(([category, catBooks]) => (
           <div style="margin-bottom:56px;">
             <div style="display:flex;align-items:center;gap:16px;margin-bottom:28px;">
-              <h2 style="font-size:0.75rem;letter-spacing:0.25em;color:var(--gold);text-transform:uppercase;font-weight:400;">{category}</h2>
+              <h2 style="font-size:0.75rem;letter-spacing:0.25em;color:var(--gold);text-transform:uppercase;font-weight:400;white-space:nowrap;">{category}</h2>
               <div style="flex:1;height:1px;background:var(--border);"></div>
             </div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+            <div class="book-grid">
               {catBooks.map(book => (
                 <a href={`${base}/books/${book.id}`} class="book-card">
                   <div style="font-size:1.3rem;font-family:var(--font-bn);color:var(--gold-light);margin-bottom:4px;">{book.data.title_bn}</div>
@@ -121,6 +121,13 @@ const jsonLd = {
 </Base>
 
 <style>
+  .hero-section {
+    padding: 80px 24px 60px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
   .hero-glow {
     position: absolute; inset: 0;
     background: radial-gradient(ellipse at center top, var(--card-hover-bg) 0%, transparent 70%);
@@ -132,6 +139,9 @@ const jsonLd = {
     letter-spacing: 0.08em;
     transition: all 0.2s;
     text-decoration: none;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
   }
   .hero-btn-primary {
     border: 1px solid var(--gold);
@@ -147,6 +157,18 @@ const jsonLd = {
   .hero-btn-secondary:hover {
     background: var(--card-hover-bg);
   }
+  .stats-section {
+    border-bottom: 1px solid var(--border);
+    padding: 24px;
+  }
+  .books-section {
+    padding: 60px 24px;
+  }
+  .book-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+    gap: 16px;
+  }
   .book-card {
     display: block;
     padding: 24px;
@@ -158,5 +180,28 @@ const jsonLd = {
   .book-card:hover {
     border-color: var(--card-hover-border) !important;
     background: var(--card-hover-bg) !important;
+  }
+
+  @media (max-width: 768px) {
+    .hero-section {
+      padding: 48px 16px 40px;
+    }
+    .books-section {
+      padding: 40px 16px;
+    }
+    .stats-section {
+      padding: 20px 16px;
+    }
+  }
+  @media (max-width: 480px) {
+    .hero-section {
+      padding: 36px 16px 32px;
+    }
+    .books-section {
+      padding: 32px 12px;
+    }
+    .book-card {
+      padding: 18px;
+    }
   }
 </style>

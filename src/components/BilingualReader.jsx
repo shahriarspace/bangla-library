@@ -32,6 +32,22 @@ function savePrefs(patch) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...prev, ...patch }));
 }
 
+// Hook: detect mobile viewport
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth <= breakpoint;
+  });
+  useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${breakpoint}px)`);
+    const handler = (e) => setIsMobile(e.matches);
+    setIsMobile(mql.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, [breakpoint]);
+  return isMobile;
+}
+
 // ---------------------------------------------------------------------------
 // Progress Bar (thin fixed bar at top of reader)
 // ---------------------------------------------------------------------------
@@ -58,11 +74,11 @@ function ProgressBar({ progress }) {
 // ---------------------------------------------------------------------------
 // Controls Toolbar
 // ---------------------------------------------------------------------------
-function Toolbar({ mode, setMode, fontSize, setFontSize, page, totalPages, setPage, showPageNav }) {
+function Toolbar({ mode, setMode, fontSize, setFontSize, page, totalPages, setPage, showPageNav, isMobile }) {
   return (
     <div style={{
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      flexWrap: 'wrap', gap: '10px',
+      flexWrap: 'wrap', gap: isMobile ? '12px' : '10px',
       padding: '12px 0',
       borderBottom: '1px solid var(--border)',
       marginBottom: '24px',
@@ -72,6 +88,7 @@ function Toolbar({ mode, setMode, fontSize, setFontSize, page, totalPages, setPa
         display: 'flex', gap: '2px',
         background: 'var(--controls-bg)', padding: '3px',
         border: '1px solid var(--btn-inactive-border)', borderRadius: '4px',
+        width: isMobile ? '100%' : 'auto',
       }}>
         {MODES.map(m => (
           <button
@@ -79,26 +96,31 @@ function Toolbar({ mode, setMode, fontSize, setFontSize, page, totalPages, setPa
             onClick={() => setMode(m.id)}
             title={m.desc}
             style={{
-              padding: '7px 14px',
+              padding: isMobile ? '12px 10px' : '7px 14px',
               border: 'none', borderRadius: '3px', cursor: 'pointer',
-              fontSize: '0.78rem', letterSpacing: '0.04em',
+              fontSize: isMobile ? '0.82rem' : '0.78rem',
+              letterSpacing: '0.04em',
               background: mode === m.id ? 'var(--btn-active-bg)' : 'transparent',
               color: mode === m.id ? 'var(--text-active)' : 'var(--btn-inactive-color)',
               transition: 'all 0.2s',
               fontFamily: 'var(--font-en)',
+              flex: isMobile ? 1 : 'none',
+              minHeight: '44px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              gap: '5px',
             }}
           >
-            <span style={{ marginRight: '5px' }}>{m.icon}</span>{m.label}
+            <span>{m.icon}</span>{isMobile ? m.label.replace('Side by Side', 'Side') : m.label}
           </button>
         ))}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'space-between' : 'flex-end' }}>
         {/* Page navigation (paginated mode only) */}
         {showPageNav && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}
-              style={navBtnStyle(page <= 1)}
+              style={navBtnStyle(page <= 1, isMobile)}
               title="Previous page"
             >&lsaquo;</button>
             <span style={{
@@ -108,24 +130,27 @@ function Toolbar({ mode, setMode, fontSize, setFontSize, page, totalPages, setPa
               {page} / {totalPages}
             </span>
             <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}
-              style={navBtnStyle(page >= totalPages)}
+              style={navBtnStyle(page >= totalPages, isMobile)}
               title="Next page"
             >&rsaquo;</button>
           </div>
         )}
 
         {/* Font size */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '5px' }}>
           {['sm', 'md', 'lg'].map(s => (
             <button key={s} onClick={() => setFontSize(s)} style={{
-              width: '28px', height: '28px',
+              width: isMobile ? '40px' : '28px',
+              height: isMobile ? '40px' : '28px',
+              minHeight: '44px', minWidth: '44px',
               border: `1px solid ${fontSize === s ? 'var(--btn-active-border)' : 'var(--btn-inactive-border)'}`,
               borderRadius: '3px', cursor: 'pointer',
               background: fontSize === s ? 'var(--btn-active-bg)' : 'transparent',
               color: fontSize === s ? 'var(--text-active)' : 'var(--btn-inactive-color)',
-              fontSize: s === 'sm' ? '0.6rem' : s === 'md' ? '0.78rem' : '0.96rem',
+              fontSize: s === 'sm' ? '0.65rem' : s === 'md' ? '0.82rem' : '1rem',
               fontFamily: 'Georgia, serif',
               transition: 'all 0.2s',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>A</button>
           ))}
         </div>
@@ -134,9 +159,11 @@ function Toolbar({ mode, setMode, fontSize, setFontSize, page, totalPages, setPa
   );
 }
 
-function navBtnStyle(disabled) {
+function navBtnStyle(disabled, isMobile) {
   return {
-    width: '30px', height: '30px',
+    width: isMobile ? '44px' : '30px',
+    height: isMobile ? '44px' : '30px',
+    minWidth: '44px', minHeight: '44px',
     border: '1px solid var(--btn-inactive-border)',
     borderRadius: '3px',
     cursor: disabled ? 'default' : 'pointer',
@@ -210,7 +237,7 @@ function BookMode({ paragraphs, activeId, setActiveId, fontSize, containerRef })
 // ---------------------------------------------------------------------------
 // Mode 2: Paginated
 // ---------------------------------------------------------------------------
-function PaginatedMode({ paragraphs, page, totalPages, setPage, activeId, setActiveId, fontSize, containerRef }) {
+function PaginatedMode({ paragraphs, page, totalPages, setPage, activeId, setActiveId, fontSize, containerRef, isMobile }) {
   const start = (page - 1) * PARAS_PER_PAGE;
   const pageParagraphs = paragraphs.slice(start, start + PARAS_PER_PAGE);
 
@@ -274,15 +301,17 @@ function PaginatedMode({ paragraphs, page, totalPages, setPage, activeId, setAct
       {/* Bottom page navigation */}
       <div style={{
         display: 'flex', justifyContent: 'center', alignItems: 'center',
-        gap: '16px', padding: '24px 0',
+        gap: isMobile ? '12px' : '16px', padding: '24px 0',
         borderTop: '1px solid var(--border)',
+        flexWrap: 'wrap',
       }}>
         <button
           onClick={() => setPage(Math.max(1, page - 1))}
           disabled={page <= 1}
           style={{
             ...pageNavBtnStyle(page <= 1),
-            padding: '10px 24px',
+            padding: isMobile ? '14px 20px' : '10px 24px',
+            minHeight: '44px',
           }}
         >
           &larr; Previous
@@ -298,7 +327,8 @@ function PaginatedMode({ paragraphs, page, totalPages, setPage, activeId, setAct
           disabled={page >= totalPages}
           style={{
             ...pageNavBtnStyle(page >= totalPages),
-            padding: '10px 24px',
+            padding: isMobile ? '14px 20px' : '10px 24px',
+            minHeight: '44px',
           }}
         >
           Next &rarr;
@@ -326,13 +356,13 @@ function pageNavBtnStyle(disabled) {
 // ---------------------------------------------------------------------------
 // Mode 3: Side by Side
 // ---------------------------------------------------------------------------
-function SideMode({ paragraphs, activeId, setActiveId, fontSize, containerRef }) {
+function SideMode({ paragraphs, activeId, setActiveId, fontSize, containerRef, isMobile }) {
   const [isSyncing, setIsSyncing] = useState(false);
   const leftRef = useRef(null);
   const rightRef = useRef(null);
 
   const syncScroll = useCallback((source, target) => {
-    if (isSyncing) return;
+    if (isSyncing || isMobile) return; // No sync on stacked mobile layout
     setIsSyncing(true);
     const src = source.current;
     const tgt = target.current;
@@ -340,16 +370,17 @@ function SideMode({ paragraphs, activeId, setActiveId, fontSize, containerRef })
     const ratio = src.scrollTop / Math.max(1, src.scrollHeight - src.clientHeight);
     tgt.scrollTop = ratio * (tgt.scrollHeight - tgt.clientHeight);
     requestAnimationFrame(() => setIsSyncing(false));
-  }, [isSyncing]);
+  }, [isSyncing, isMobile]);
 
   const handleClick = (id) => {
     setActiveId(activeId === id ? null : id);
   };
 
   const colStyle = {
-    height: '70vh',
+    height: isMobile ? 'auto' : '70vh',
+    maxHeight: isMobile ? '50vh' : 'none',
     overflowY: 'auto',
-    padding: '28px 24px',
+    padding: isMobile ? '16px 12px' : '28px 24px',
     scrollbarWidth: 'thin',
     scrollbarColor: 'var(--scrollbar-thumb) transparent',
   };
@@ -357,7 +388,7 @@ function SideMode({ paragraphs, activeId, setActiveId, fontSize, containerRef })
   return (
     <div ref={containerRef} style={{
       display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
+      gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
       gap: '1px',
       background: 'var(--border)',
       border: '1px solid var(--border)',
@@ -371,8 +402,9 @@ function SideMode({ paragraphs, activeId, setActiveId, fontSize, containerRef })
         onScroll={() => syncScroll(leftRef, rightRef)}
       >
         <div style={{
-          fontSize: '0.6rem', letterSpacing: '0.2em', color: 'var(--gold)',
-          textAlign: 'center', marginBottom: '20px', opacity: 0.6,
+          fontSize: isMobile ? '0.7rem' : '0.6rem',
+          letterSpacing: '0.2em', color: 'var(--gold)',
+          textAlign: 'center', marginBottom: isMobile ? '12px' : '20px', opacity: 0.6,
           textTransform: 'uppercase',
         }}>
           Bengali Original
@@ -407,8 +439,9 @@ function SideMode({ paragraphs, activeId, setActiveId, fontSize, containerRef })
         onScroll={() => syncScroll(rightRef, leftRef)}
       >
         <div style={{
-          fontSize: '0.6rem', letterSpacing: '0.2em', color: 'var(--gold)',
-          textAlign: 'center', marginBottom: '20px', opacity: 0.6,
+          fontSize: isMobile ? '0.7rem' : '0.6rem',
+          letterSpacing: '0.2em', color: 'var(--gold)',
+          textAlign: 'center', marginBottom: isMobile ? '12px' : '20px', opacity: 0.6,
           textTransform: 'uppercase',
         }}>
           English Translation
@@ -451,6 +484,7 @@ export default function BilingualReader({ book, base = '' }) {
   const [activeId, setActiveId] = useState(null);
   const [progress, setProgress] = useState(0);
   const containerRef = useRef(null);
+  const isMobile = useIsMobile(768);
 
   const totalPages = Math.ceil(book.paragraphs.length / PARAS_PER_PAGE);
 
@@ -495,6 +529,7 @@ export default function BilingualReader({ book, base = '' }) {
         fontSize={fontSize} setFontSize={setFontSize}
         page={page} totalPages={totalPages} setPage={setPage}
         showPageNav={mode === 'paginated'}
+        isMobile={isMobile}
       />
 
       {/* Reading modes */}
@@ -514,6 +549,7 @@ export default function BilingualReader({ book, base = '' }) {
           activeId={activeId} setActiveId={setActiveId}
           fontSize={fontSize}
           containerRef={containerRef}
+          isMobile={isMobile}
         />
       )}
 
@@ -523,6 +559,7 @@ export default function BilingualReader({ book, base = '' }) {
           activeId={activeId} setActiveId={setActiveId}
           fontSize={fontSize}
           containerRef={containerRef}
+          isMobile={isMobile}
         />
       )}
 
@@ -535,7 +572,9 @@ export default function BilingualReader({ book, base = '' }) {
       }}>
         {mode === 'book' && 'Click any passage to highlight \u00B7 Scroll to read'}
         {mode === 'paginated' && 'Use arrow keys or buttons to turn pages \u00B7 Click to highlight'}
-        {mode === 'side' && 'Scroll syncs both columns \u00B7 Click to highlight'}
+        {mode === 'side' && (isMobile
+          ? 'Tap any passage to highlight \u00B7 Scroll each section'
+          : 'Scroll syncs both columns \u00B7 Click to highlight')}
       </div>
     </div>
   );

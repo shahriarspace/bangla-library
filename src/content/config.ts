@@ -10,6 +10,7 @@ const books = defineCollection({
     year: z.string(),
     category: z.string(),
     description_en: z.string().optional(),
+    copyright_notice: z.string().optional(),
     paragraphs: z.array(z.object({
       id: z.number(),
       bn: z.string(),

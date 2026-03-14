@@ -13,7 +13,7 @@ const categories = [...new Set(books.map(b => b.data.category))];
   description="Browse all classical Bangla books with English translations. Find novels, poetry, and essays by renowned Bengali authors in our bilingual library."
   canonicalPath="/books/"
 >
-  <main style="padding: 60px 24px;">
+  <main class="books-main">
     <div class="container">
 
       <div style="text-align:center;margin-bottom:48px;">
@@ -34,7 +34,7 @@ const categories = [...new Set(books.map(b => b.data.category))];
       </div>
 
       <!-- Book grid -->
-      <div id="book-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+      <div id="book-grid" class="book-grid">
         {books.map(book => (
           <a
             href={`${base}/books/${book.id}`}
@@ -60,6 +60,14 @@ const categories = [...new Set(books.map(b => b.data.category))];
 </Base>
 
 <style>
+  .books-main {
+    padding: 60px 24px;
+  }
+  .book-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+    gap: 16px;
+  }
   .book-card {
     display: block;
     padding: 24px;
@@ -73,21 +81,36 @@ const categories = [...new Set(books.map(b => b.data.category))];
     background: var(--card-hover-bg) !important;
   }
   .filter-btn {
-    padding: 6px 16px;
+    padding: 10px 16px;
     border: 1px solid var(--border);
     background: transparent;
     color: var(--gold-dim);
     border-radius: 2px;
     cursor: pointer;
-    font-size: 0.78rem;
+    font-size: 0.82rem;
     letter-spacing: 0.08em;
     font-family: Georgia, serif;
     transition: all 0.2s;
+    min-height: 44px;
   }
   .filter-btn-active {
     border-color: var(--card-hover-border);
     background: var(--btn-active-bg);
     color: var(--gold-light);
+  }
+
+  @media (max-width: 768px) {
+    .books-main {
+      padding: 40px 16px;
+    }
+    .book-card {
+      padding: 18px;
+    }
+  }
+  @media (max-width: 480px) {
+    .books-main {
+      padding: 32px 12px;
+    }
   }
 </style>
 

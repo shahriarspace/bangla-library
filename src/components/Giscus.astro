@@ -12,7 +12,7 @@ interface Props {
 const { term } = Astro.props;
 ---
 
-<section class="giscus-section" aria-label="Comments and reactions">
+<section id="giscus-comments" class="giscus-section" aria-label="Comments and reactions">
   <div class="giscus-header">
     <div class="giscus-divider"></div>
     <h2 class="giscus-title">Comments & Reactions</h2>
@@ -55,7 +55,7 @@ const { term } = Astro.props;
     script.setAttribute('data-term', term);
     script.setAttribute('data-strict', '0');
     script.setAttribute('data-reactions-enabled', '1');
-    script.setAttribute('data-emit-metadata', '0');
+    script.setAttribute('data-emit-metadata', '1');
     script.setAttribute('data-input-position', 'top');
     script.setAttribute('data-theme', getGiscusTheme());
     script.setAttribute('data-lang', 'en');
