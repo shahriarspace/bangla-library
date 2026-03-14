@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import BilingualReader from '../../components/BilingualReader.jsx';
+import Giscus from '../../components/Giscus.astro';
 import { getCollection, getEntry } from 'astro:content';
 
 export async function getStaticPaths() {
@@ -121,6 +122,9 @@ const jsonLd = [
         <BilingualReader client:load book={book} base={base} />
       </div>
     </section>
+
+    <!-- Comments & Reactions (Giscus) -->
+    <Giscus term={`book/${slug}`} />
 
     <!-- Related / nav -->
     <section style="padding: 0 24px 60px;">

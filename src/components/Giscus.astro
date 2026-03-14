@@ -1,0 +1,137 @@
+---
+/**
+ * Giscus comment/reaction widget for book pages.
+ * Syncs Giscus theme with the site's 7-theme system via data-theme attribute.
+ *
+ * Props:
+ *   term - The discussion mapping term (e.g. book slug or title)
+ */
+interface Props {
+  term: string;
+}
+const { term } = Astro.props;
+---
+
+<section class="giscus-section" aria-label="Comments and reactions">
+  <div class="giscus-header">
+    <div class="giscus-divider"></div>
+    <h2 class="giscus-title">Comments & Reactions</h2>
+    <p class="giscus-subtitle">Sign in with GitHub to leave a comment or reaction</p>
+  </div>
+
+  <div class="giscus-container">
+    <div class="giscus"></div>
+  </div>
+</section>
+
+<script is:inline define:vars={{ term }}>
+  // Map site themes to Giscus themes
+  function getGiscusTheme() {
+    var siteTheme = document.documentElement.getAttribute('data-theme') || 'antique-gold';
+    var map = {
+      'antique-gold': 'dark',
+      'classic-white': 'light',
+      'sepia': 'light',
+      'dark': 'dark_dimmed',
+      'true-black': 'dark_high_contrast',
+      'forest': 'dark_dimmed',
+      'sunset-rose': 'dark',
+    };
+    return map[siteTheme] || 'dark';
+  }
+
+  // Load Giscus script
+  function loadGiscus() {
+    var existing = document.querySelector('script[src="https://giscus.app/client.js"]');
+    if (existing) existing.remove();
+
+    var script = document.createElement('script');
+    script.src = 'https://giscus.app/client.js';
+    script.setAttribute('data-repo', 'shahriarspace/bangla-library');
+    script.setAttribute('data-repo-id', 'R_kgDORm10gg');
+    script.setAttribute('data-category', 'General');
+    script.setAttribute('data-category-id', 'DIC_kwDORm10gs4C4YRq');
+    script.setAttribute('data-mapping', 'specific');
+    script.setAttribute('data-term', term);
+    script.setAttribute('data-strict', '0');
+    script.setAttribute('data-reactions-enabled', '1');
+    script.setAttribute('data-emit-metadata', '0');
+    script.setAttribute('data-input-position', 'top');
+    script.setAttribute('data-theme', getGiscusTheme());
+    script.setAttribute('data-lang', 'en');
+    script.setAttribute('data-loading', 'lazy');
+    script.crossOrigin = 'anonymous';
+    script.async = true;
+
+    var container = document.querySelector('.giscus');
+    if (container) container.appendChild(script);
+  }
+
+  // Update Giscus theme when site theme changes
+  function syncGiscusTheme() {
+    var iframe = document.querySelector('iframe.giscus-frame');
+    if (!iframe) return;
+    iframe.contentWindow.postMessage(
+      { giscus: { setConfig: { theme: getGiscusTheme() } } },
+      'https://giscus.app'
+    );
+  }
+
+  // Watch for theme changes on <html> data-theme attribute
+  var observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(m) {
+      if (m.attributeName === 'data-theme') {
+        syncGiscusTheme();
+      }
+    });
+  });
+  observer.observe(document.documentElement, { attributes: true });
+
+  // Load on DOMContentLoaded or immediately if already loaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadGiscus);
+  } else {
+    loadGiscus();
+  }
+</script>
+
+<style>
+  .giscus-section {
+    padding: 0 24px 60px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .giscus-header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .giscus-divider {
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 0 auto 24px;
+  }
+
+  .giscus-title {
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    text-transform: uppercase;
+    font-weight: 400;
+    margin-bottom: 8px;
+  }
+
+  .giscus-subtitle {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    letter-spacing: 0.06em;
+  }
+
+  .giscus-container {
+    max-width: 720px;
+    margin: 0 auto;
+    min-height: 200px;
+  }
+</style>
