@@ -367,7 +367,7 @@ function SideMode({ paragraphs, activeId, setActiveId, fontSize, containerRef, i
   const rightRef = useRef(null);
 
   const syncScroll = useCallback((source, target) => {
-    if (isSyncing || isMobile) return; // No sync on stacked mobile layout
+    if (isSyncing) return;
     setIsSyncing(true);
     const src = source.current;
     const tgt = target.current;
@@ -375,25 +375,29 @@ function SideMode({ paragraphs, activeId, setActiveId, fontSize, containerRef, i
     const ratio = src.scrollTop / Math.max(1, src.scrollHeight - src.clientHeight);
     tgt.scrollTop = ratio * (tgt.scrollHeight - tgt.clientHeight);
     requestAnimationFrame(() => setIsSyncing(false));
-  }, [isSyncing, isMobile]);
+  }, [isSyncing]);
 
   const handleClick = (id) => {
     setActiveId(activeId === id ? null : id);
   };
 
+  // Mobile: smaller font sizes for side-by-side to fit two columns
+  const mobileBnSize = fontSize === 'sm' ? '0.78rem' : fontSize === 'md' ? '0.88rem' : '1.05rem';
+  const mobileEnSize = fontSize === 'sm' ? '0.72rem' : fontSize === 'md' ? '0.82rem' : '0.95rem';
+
   const colStyle = {
-    height: isMobile ? 'auto' : '70vh',
-    maxHeight: isMobile ? '50vh' : 'none',
+    height: '70vh',
     overflowY: 'auto',
-    padding: isMobile ? '16px 12px' : '28px 24px',
+    padding: isMobile ? '10px 6px' : '28px 24px',
     scrollbarWidth: 'thin',
     scrollbarColor: 'var(--scrollbar-thumb) transparent',
+    WebkitOverflowScrolling: 'touch',
   };
 
   return (
     <div ref={containerRef} style={{
       display: 'grid',
-      gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+      gridTemplateColumns: '1fr 1fr',
       gap: '1px',
       background: 'var(--border)',
       border: '1px solid var(--border)',
@@ -408,29 +412,30 @@ function SideMode({ paragraphs, activeId, setActiveId, fontSize, containerRef, i
         onScroll={() => syncScroll(leftRef, rightRef)}
       >
         <div style={{
-          fontSize: isMobile ? '0.7rem' : '0.6rem',
-          letterSpacing: '0.2em', color: 'var(--gold)',
-          textAlign: 'center', marginBottom: isMobile ? '12px' : '20px', opacity: 0.6,
+          fontSize: isMobile ? '0.55rem' : '0.6rem',
+          letterSpacing: '0.15em', color: 'var(--gold)',
+          textAlign: 'center', marginBottom: isMobile ? '8px' : '20px', opacity: 0.6,
           textTransform: 'uppercase',
         }}>
-          Bengali Original
+          {isMobile ? 'Bengali' : 'Bengali Original'}
         </div>
         {paragraphs.map(p => (
           <div
             key={p.id}
             onClick={() => handleClick(p.id)}
             style={{
-              padding: '16px 14px',
+              padding: isMobile ? '8px 4px' : '16px 14px',
               marginBottom: '4px',
               cursor: 'pointer',
               borderLeft: activeId === p.id ? '2px solid var(--border-active)' : '2px solid transparent',
               background: activeId === p.id ? 'var(--highlight)' : 'transparent',
               borderRadius: '2px',
               transition: 'all 0.15s',
-              fontSize: FONT_SIZES[fontSize].bn,
+              fontSize: isMobile ? mobileBnSize : FONT_SIZES[fontSize].bn,
               fontFamily: 'var(--font-bn)',
-              lineHeight: '2.1',
+              lineHeight: isMobile ? '1.8' : '2.1',
               color: activeId === p.id ? 'var(--text-active)' : 'var(--text-bn)',
+              wordBreak: 'break-word',
             }}
           >
             {p.bn}
@@ -445,30 +450,31 @@ function SideMode({ paragraphs, activeId, setActiveId, fontSize, containerRef, i
         onScroll={() => syncScroll(rightRef, leftRef)}
       >
         <div style={{
-          fontSize: isMobile ? '0.7rem' : '0.6rem',
-          letterSpacing: '0.2em', color: 'var(--gold)',
-          textAlign: 'center', marginBottom: isMobile ? '12px' : '20px', opacity: 0.6,
+          fontSize: isMobile ? '0.55rem' : '0.6rem',
+          letterSpacing: '0.15em', color: 'var(--gold)',
+          textAlign: 'center', marginBottom: isMobile ? '8px' : '20px', opacity: 0.6,
           textTransform: 'uppercase',
         }}>
-          English Translation
+          {isMobile ? 'English' : 'English Translation'}
         </div>
         {paragraphs.map(p => (
           <div
             key={p.id}
             onClick={() => handleClick(p.id)}
             style={{
-              padding: '16px 14px',
+              padding: isMobile ? '8px 4px' : '16px 14px',
               marginBottom: '4px',
               cursor: 'pointer',
               borderLeft: activeId === p.id ? '2px solid var(--border-active)' : '2px solid transparent',
               background: activeId === p.id ? 'var(--highlight)' : 'transparent',
               borderRadius: '2px',
               transition: 'all 0.15s',
-              fontSize: FONT_SIZES[fontSize].en,
+              fontSize: isMobile ? mobileEnSize : FONT_SIZES[fontSize].en,
               fontFamily: 'var(--font-en)',
               fontStyle: 'italic',
-              lineHeight: '1.9',
+              lineHeight: isMobile ? '1.6' : '1.9',
               color: activeId === p.id ? 'var(--text-active)' : 'var(--text-en)',
+              wordBreak: 'break-word',
             }}
           >
             {p.en}
@@ -698,9 +704,7 @@ export default function BilingualReader({ book, base = '' }) {
       }}>
         {mode === 'book' && 'Click any passage to highlight \u00B7 Scroll to read'}
         {mode === 'paginated' && 'Use arrow keys or buttons to turn pages \u00B7 Click to highlight'}
-        {mode === 'side' && (isMobile
-          ? 'Tap any passage to highlight \u00B7 Scroll each section'
-          : 'Scroll syncs both columns \u00B7 Click to highlight')}
+        {mode === 'side' && 'Scroll syncs both columns \u00B7 Click to highlight'}
         {mode === 'bn' && 'Bengali text only \u00B7 Use arrow keys or buttons to turn pages'}
         {mode === 'en' && 'English translation only \u00B7 Use arrow keys or buttons to turn pages'}
       </div>
