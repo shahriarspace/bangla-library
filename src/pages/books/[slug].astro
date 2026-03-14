@@ -134,7 +134,7 @@ const jsonLd = [
     </div>
 
     <!-- Bilingual Reader (React Island) -->
-    <section style="padding: 40px 24px 60px;">
+    <section class="reader-section">
       <div class="container">
         <BilingualReader client:load book={book} base={base} />
       </div>
@@ -193,6 +193,10 @@ const jsonLd = [
     border-radius: 4px;
     margin-top: 20px;
   }
+  .reader-section {
+    padding: 40px 24px 60px;
+    overflow-x: hidden;
+  }
   .sr-only {
     position: absolute;
     width: 1px;
@@ -209,10 +213,16 @@ const jsonLd = [
     .book-header {
       padding: 36px 16px 28px;
     }
+    .reader-section {
+      padding: 28px 12px 40px;
+    }
   }
   @media (max-width: 480px) {
     .book-header {
       padding: 28px 12px 24px;
+    }
+    .reader-section {
+      padding: 20px 8px 32px;
     }
   }
 </style>

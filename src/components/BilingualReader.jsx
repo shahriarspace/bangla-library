@@ -87,10 +87,11 @@ function Toolbar({ mode, setMode, fontSize, setFontSize, page, totalPages, setPa
     }}>
       {/* Mode switcher */}
       <div style={{
-        display: 'flex', gap: '2px',
+        display: 'flex', flexWrap: isMobile ? 'wrap' : 'nowrap', gap: '2px',
         background: 'var(--controls-bg)', padding: '3px',
         border: '1px solid var(--btn-inactive-border)', borderRadius: '4px',
         width: isMobile ? '100%' : 'auto',
+        overflow: 'hidden',
       }}>
         {MODES.map(m => (
           <button
@@ -98,18 +99,20 @@ function Toolbar({ mode, setMode, fontSize, setFontSize, page, totalPages, setPa
             onClick={() => setMode(m.id)}
             title={m.desc}
             style={{
-              padding: isMobile ? '12px 10px' : '7px 14px',
+              padding: isMobile ? '8px 6px' : '7px 14px',
               border: 'none', borderRadius: '3px', cursor: 'pointer',
-              fontSize: isMobile ? '0.82rem' : '0.78rem',
-              letterSpacing: '0.04em',
+              fontSize: isMobile ? '0.72rem' : '0.78rem',
+              letterSpacing: '0.02em',
               background: mode === m.id ? 'var(--btn-active-bg)' : 'transparent',
               color: mode === m.id ? 'var(--text-active)' : 'var(--btn-inactive-color)',
               transition: 'all 0.2s',
               fontFamily: 'var(--font-en)',
-              flex: isMobile ? 1 : 'none',
+              flex: isMobile ? '1 1 auto' : 'none',
+              minWidth: isMobile ? 'calc(33.33% - 2px)' : 'auto',
               minHeight: '44px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              gap: '5px',
+              gap: '4px',
+              whiteSpace: 'nowrap',
             }}
           >
             <span>{m.icon}</span>{isMobile ? m.label.replace('Side by Side', 'Side') : m.label}
@@ -396,6 +399,7 @@ function SideMode({ paragraphs, activeId, setActiveId, fontSize, containerRef, i
       border: '1px solid var(--border)',
       borderRadius: '4px',
       overflow: 'hidden',
+      maxWidth: '100%',
     }}>
       {/* Bengali column */}
       <div
@@ -631,7 +635,7 @@ export default function BilingualReader({ book, base = '' }) {
   }, [mode, page, totalPages]);
 
   return (
-    <div style={{ fontFamily: 'var(--font-en)' }}>
+    <div style={{ fontFamily: 'var(--font-en)', overflowX: 'hidden', maxWidth: '100%' }}>
       <ProgressBar progress={progress} />
 
       <Toolbar
