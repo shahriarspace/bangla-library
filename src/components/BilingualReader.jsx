@@ -13,9 +13,11 @@ const FONT_SIZES = {
 };
 
 const MODES = [
-  { id: 'book',       label: 'Book',       icon: '\u{1F4D6}', desc: 'Interleaved bilingual' },
-  { id: 'paginated',  label: 'Pages',      icon: '\u{1F4C4}', desc: 'Page-by-page' },
+  { id: 'book',       label: 'Book',         icon: '\u{1F4D6}', desc: 'Interleaved bilingual' },
+  { id: 'paginated',  label: 'Pages',        icon: '\u{1F4C4}', desc: 'Page-by-page' },
   { id: 'side',       label: 'Side by Side', icon: '\u{2194}',  desc: 'Two columns' },
+  { id: 'bn',         label: 'Bangla',  icon: '\u{0995}',  desc: 'Bengali text only' },
+  { id: 'en',         label: 'English', icon: 'A',          desc: 'English translation only' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -474,6 +476,114 @@ function SideMode({ paragraphs, activeId, setActiveId, fontSize, containerRef, i
 }
 
 // ---------------------------------------------------------------------------
+// Mode 4 & 5: Single Language (Bangla Only / English Only)
+// ---------------------------------------------------------------------------
+function SingleLanguageMode({ paragraphs, lang, page, totalPages, setPage, activeId, setActiveId, fontSize, containerRef, isMobile }) {
+  const start = (page - 1) * PARAS_PER_PAGE;
+  const pageParagraphs = paragraphs.slice(start, start + PARAS_PER_PAGE);
+  const isBn = lang === 'bn';
+
+  // Keyboard navigation
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        setPage(p => Math.max(1, p - 1));
+      } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+        e.preventDefault();
+        setPage(p => Math.min(totalPages, p + 1));
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [totalPages, setPage]);
+
+  return (
+    <div ref={containerRef}>
+      {/* Column heading */}
+      <div style={{
+        fontSize: '0.65rem', letterSpacing: '0.2em', color: 'var(--gold)',
+        textAlign: 'center', marginBottom: '16px', opacity: 0.6,
+        textTransform: 'uppercase',
+      }}>
+        {isBn ? 'Bengali Original' : 'English Translation'}
+      </div>
+
+      {/* Page content */}
+      <div style={{
+        maxWidth: '720px', margin: '0 auto',
+        minHeight: '60vh',
+        padding: '8px 16px 40px',
+      }}>
+        {pageParagraphs.map(p => (
+          <div
+            key={p.id}
+            onClick={() => setActiveId(activeId === p.id ? null : p.id)}
+            style={{
+              marginBottom: '28px',
+              cursor: 'pointer',
+              padding: '12px 14px',
+              borderLeft: activeId === p.id ? '2px solid var(--border-active)' : '2px solid transparent',
+              background: activeId === p.id ? 'var(--highlight)' : 'transparent',
+              borderRadius: '2px',
+              transition: 'all 0.15s',
+            }}
+          >
+            <p style={{
+              fontSize: isBn ? FONT_SIZES[fontSize].bn : FONT_SIZES[fontSize].en,
+              fontFamily: isBn ? 'var(--font-bn)' : 'var(--font-en)',
+              fontStyle: isBn ? 'normal' : 'italic',
+              lineHeight: isBn ? '2.1' : '1.9',
+              color: activeId === p.id ? 'var(--text-active)' : (isBn ? 'var(--text-bn)' : 'var(--text-en)'),
+              margin: 0,
+            }}>
+              {isBn ? p.bn : p.en}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Bottom page navigation */}
+      <div style={{
+        display: 'flex', justifyContent: 'center', alignItems: 'center',
+        gap: isMobile ? '12px' : '16px', padding: '24px 0',
+        borderTop: '1px solid var(--border)',
+        flexWrap: 'wrap',
+      }}>
+        <button
+          onClick={() => setPage(Math.max(1, page - 1))}
+          disabled={page <= 1}
+          style={{
+            ...pageNavBtnStyle(page <= 1),
+            padding: isMobile ? '14px 20px' : '10px 24px',
+            minHeight: '44px',
+          }}
+        >
+          &larr; Previous
+        </button>
+        <span style={{
+          fontSize: '0.82rem', color: 'var(--text-dim)',
+          letterSpacing: '0.08em',
+        }}>
+          Page {page} of {totalPages}
+        </span>
+        <button
+          onClick={() => setPage(Math.min(totalPages, page + 1))}
+          disabled={page >= totalPages}
+          style={{
+            ...pageNavBtnStyle(page >= totalPages),
+            padding: isMobile ? '14px 20px' : '10px 24px',
+            minHeight: '44px',
+          }}
+        >
+          Next &rarr;
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main Component
 // ---------------------------------------------------------------------------
 export default function BilingualReader({ book, base = '' }) {
@@ -528,7 +638,7 @@ export default function BilingualReader({ book, base = '' }) {
         mode={mode} setMode={setMode}
         fontSize={fontSize} setFontSize={setFontSize}
         page={page} totalPages={totalPages} setPage={setPage}
-        showPageNav={mode === 'paginated'}
+        showPageNav={mode === 'paginated' || mode === 'bn' || mode === 'en'}
         isMobile={isMobile}
       />
 
@@ -563,6 +673,18 @@ export default function BilingualReader({ book, base = '' }) {
         />
       )}
 
+      {(mode === 'bn' || mode === 'en') && (
+        <SingleLanguageMode
+          paragraphs={book.paragraphs}
+          lang={mode}
+          page={page} totalPages={totalPages} setPage={setPage}
+          activeId={activeId} setActiveId={setActiveId}
+          fontSize={fontSize}
+          containerRef={containerRef}
+          isMobile={isMobile}
+        />
+      )}
+
       {/* Hints */}
       <div style={{
         marginTop: '24px', textAlign: 'center',
@@ -575,6 +697,8 @@ export default function BilingualReader({ book, base = '' }) {
         {mode === 'side' && (isMobile
           ? 'Tap any passage to highlight \u00B7 Scroll each section'
           : 'Scroll syncs both columns \u00B7 Click to highlight')}
+        {mode === 'bn' && 'Bengali text only \u00B7 Use arrow keys or buttons to turn pages'}
+        {mode === 'en' && 'English translation only \u00B7 Use arrow keys or buttons to turn pages'}
       </div>
     </div>
   );
