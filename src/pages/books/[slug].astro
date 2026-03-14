@@ -21,11 +21,11 @@ const base = import.meta.env.BASE_URL;
   <main>
 
     <!-- Book header -->
-    <section style="padding: 56px 24px 40px; border-bottom: 1px solid var(--border); text-align:center; position:relative; overflow:hidden;">
-      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center top, rgba(200,160,80,0.05) 0%, transparent 65%);pointer-events:none;"></div>
+    <section class="book-header">
+      <div class="book-header-glow"></div>
       <div style="font-size:0.68rem;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:16px;">
         <a href={`${base}/books`} style="color:var(--gold-dim);">Library</a>
-        <span style="margin:0 8px;opacity:0.4;">·</span>
+        <span style="margin:0 8px;opacity:0.4;">&middot;</span>
         {book.category}
       </div>
       <h1 style="font-family:var(--font-bn);font-size:clamp(1.8rem,4vw,3rem);color:var(--gold-light);font-weight:600;margin-bottom:8px;">
@@ -36,9 +36,9 @@ const base = import.meta.env.BASE_URL;
       </h2>
       <div style="font-size:0.85rem;color:var(--text-dim);margin-bottom:8px;">
         <a href={`${base}/authors/${encodeURIComponent(book.author_en.toLowerCase().replace(/ /g,'-'))}`} style="color:var(--gold-dim);">
-          {book.author_bn} · {book.author_en}
+          {book.author_bn} &middot; {book.author_en}
         </a>
-        <span style="margin:0 10px;opacity:0.3;">·</span>
+        <span style="margin:0 10px;opacity:0.3;">&middot;</span>
         {book.year}
       </div>
       {book.description_en && (
@@ -50,7 +50,6 @@ const base = import.meta.env.BASE_URL;
     </section>
 
     <!-- SEO-visible text (hidden visually, fully crawlable by Google) -->
-    <!-- The actual reader is the React island below, but this ensures indexing -->
     <div style="display:none;" aria-hidden="true" data-pagefind-body>
       {book.paragraphs.map(p => (
         <div>
@@ -71,10 +70,25 @@ const base = import.meta.env.BASE_URL;
     <section style="padding: 0 24px 60px;">
       <div class="container" style="text-align:center;">
         <a href={`${base}/books`} style="font-size:0.8rem;letter-spacing:0.12em;color:var(--gold-dim);text-transform:uppercase;">
-          ← Back to Library
+          &larr; Back to Library
         </a>
       </div>
     </section>
 
   </main>
 </Base>
+
+<style>
+  .book-header {
+    padding: 56px 24px 40px;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .book-header-glow {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center top, var(--card-hover-bg) 0%, transparent 65%);
+    pointer-events: none;
+  }
+</style>

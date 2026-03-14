@@ -31,12 +31,12 @@ const byAuthor = books.reduce((acc, book) => {
 
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;">
         {Object.values(byAuthor).map(author => (
-          <div style="padding:28px;border:1px solid var(--border);background:rgba(255,255,255,0.02);">
+          <div class="author-card">
             <div style="font-size:1.3rem;font-family:var(--font-bn);color:var(--gold-light);margin-bottom:4px;">{author.author_bn}</div>
             <div style="font-size:1rem;color:var(--gold);margin-bottom:16px;">{author.author_en}</div>
             <div style="display:flex;flex-direction:column;gap:8px;">
               {author.books.map(book => (
-                <a href={`${base}/books/${book.id}`} style="font-size:0.82rem;color:var(--text-dim);display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(200,160,80,0.08);">
+                <a href={`${base}/books/${book.id}`} class="author-book-link">
                   <span>{book.data.title_en}</span>
                   <span style="color:var(--gold-dim);font-size:0.72rem;">{book.data.year}</span>
                 </a>
@@ -51,3 +51,26 @@ const byAuthor = books.reduce((acc, book) => {
     </div>
   </main>
 </Base>
+
+<style>
+  .author-card {
+    padding: 28px;
+    border: 1px solid var(--border);
+    background: var(--bg-panel);
+    transition: border-color 0.25s, background 0.25s;
+  }
+  .author-book-link {
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .author-book-link:hover {
+    color: var(--gold-light);
+  }
+</style>

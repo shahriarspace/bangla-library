@@ -19,13 +19,11 @@ const categories = [...new Set(books.map(b => b.data.category))];
 
       <!-- Filter by category -->
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:40px;justify-content:center;">
-        <button onclick="filterBooks('all')" id="filter-all"
-          style="padding:6px 16px;border:1px solid rgba(200,160,80,0.4);background:rgba(200,160,80,0.15);color:var(--gold-light);border-radius:2px;cursor:pointer;font-size:0.78rem;letter-spacing:0.08em;font-family:Georgia,serif;">
+        <button onclick="filterBooks('all')" id="filter-all" class="filter-btn filter-btn-active">
           All
         </button>
         {categories.map(cat => (
-          <button onclick={`filterBooks('${cat}')`} id={`filter-${cat}`}
-            style="padding:6px 16px;border:1px solid var(--border);background:transparent;color:var(--gold-dim);border-radius:2px;cursor:pointer;font-size:0.78rem;letter-spacing:0.08em;font-family:Georgia,serif;">
+          <button onclick={`filterBooks('${cat}')`} id={`filter-${cat}`} class="filter-btn">
             {cat}
           </button>
         ))}
@@ -38,7 +36,6 @@ const categories = [...new Set(books.map(b => b.data.category))];
             href={`${base}/books/${book.id}`}
             class="book-card"
             data-category={book.data.category}
-            style="display:block;padding:24px;border:1px solid var(--border);background:rgba(255,255,255,0.02);transition:all 0.25s;text-decoration:none;"
           >
             <div style="font-size:1.25rem;font-family:var(--font-bn);color:var(--gold-light);margin-bottom:4px;">{book.data.title_bn}</div>
             <div style="font-size:0.88rem;color:var(--gold);margin-bottom:10px;font-style:italic;">{book.data.title_en}</div>
@@ -49,7 +46,7 @@ const categories = [...new Set(books.map(b => b.data.category))];
               {book.data.category}
             </div>
             <div style="margin-top:14px;font-size:0.72rem;letter-spacing:0.08em;color:var(--gold-dim);">
-              {book.data.paragraphs.length} passages · Read →
+              {book.data.paragraphs.length} passages · Read &rarr;
             </div>
           </a>
         ))}
@@ -59,33 +56,54 @@ const categories = [...new Set(books.map(b => b.data.category))];
 </Base>
 
 <style>
+  .book-card {
+    display: block;
+    padding: 24px;
+    border: 1px solid var(--border);
+    background: var(--bg-panel);
+    transition: all 0.25s;
+    text-decoration: none;
+  }
   .book-card:hover {
-    border-color: rgba(200,160,80,0.4) !important;
-    background: rgba(200,160,80,0.04) !important;
+    border-color: var(--card-hover-border) !important;
+    background: var(--card-hover-bg) !important;
+  }
+  .filter-btn {
+    padding: 6px 16px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--gold-dim);
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    font-family: Georgia, serif;
+    transition: all 0.2s;
+  }
+  .filter-btn-active {
+    border-color: var(--card-hover-border);
+    background: var(--btn-active-bg);
+    color: var(--gold-light);
   }
 </style>
 
-<script>
+<script is:inline>
   function filterBooks(category) {
-    const cards = document.querySelectorAll('.book-card');
-    cards.forEach(card => {
+    var cards = document.querySelectorAll('.book-card');
+    cards.forEach(function(card) {
       if (category === 'all' || card.dataset.category === category) {
         card.style.display = 'block';
       } else {
         card.style.display = 'none';
       }
     });
-    // Update button states
-    document.querySelectorAll('[id^="filter-"]').forEach(btn => {
-      btn.style.background = 'transparent';
-      btn.style.borderColor = 'rgba(200,160,80,0.15)';
-      btn.style.color = '#a08050';
+    // Update button states via classes
+    document.querySelectorAll('.filter-btn').forEach(function(btn) {
+      btn.classList.remove('filter-btn-active');
     });
-    const active = document.getElementById(`filter-${category}`);
+    var active = document.getElementById('filter-' + category);
     if (active) {
-      active.style.background = 'rgba(200,160,80,0.15)';
-      active.style.borderColor = 'rgba(200,160,80,0.4)';
-      active.style.color = '#f0dfa0';
+      active.classList.add('filter-btn-active');
     }
   }
   window.filterBooks = filterBooks;

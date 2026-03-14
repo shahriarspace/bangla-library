@@ -24,20 +24,223 @@ const base = import.meta.env.BASE_URL;
   <!-- Pagefind search UI (generated after build) -->
   <link href={`${base}/pagefind/pagefind-ui.css`} rel="stylesheet" />
   <script src={`${base}/pagefind/pagefind-ui.js`} is:inline></script>
+
+  <!-- Restore saved theme before paint to prevent flash -->
+  <script is:inline>
+    (function(){
+      var t = localStorage.getItem('bl-theme');
+      if (t) document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
+
+    /* ========================================================
+       THEME SYSTEM — 7 themes via data-theme attribute
+       ======================================================== */
+
+    /* --- Theme 1: Antique Gold (default / current) --- */
+    :root,
+    [data-theme="antique-gold"] {
       --bg: #12100e;
       --bg2: #1c1812;
+      --bg-nav: rgba(18,16,14,0.95);
+      --bg-panel: rgba(255,255,255,0.02);
       --gold: #c8a050;
       --gold-light: #f0dfa0;
       --gold-dim: #a08050;
       --text: #d4b87a;
       --text-dim: #8a7050;
+      --text-bn: #d4b87a;
+      --text-en: #c8a878;
+      --text-active: #f0dfa0;
       --border: rgba(200,160,80,0.15);
+      --border-active: #c8a050;
+      --highlight: rgba(200,160,80,0.07);
+      --btn-active-bg: rgba(200,160,80,0.2);
+      --btn-active-border: rgba(200,160,80,0.4);
+      --btn-inactive-border: rgba(200,160,80,0.15);
+      --btn-inactive-color: #a08050;
+      --controls-bg: rgba(0,0,0,0.3);
+      --id-color: #c8a050;
+      --scrollbar-thumb: rgba(200,160,80,0.2);
+      --card-hover-border: rgba(200,160,80,0.4);
+      --card-hover-bg: rgba(200,160,80,0.04);
       --font-en: 'Lora', Georgia, serif;
       --font-bn: 'Noto Serif Bengali', serif;
     }
+
+    /* --- Theme 2: Classic White --- */
+    [data-theme="classic-white"] {
+      --bg: #ffffff;
+      --bg2: #f5f5f5;
+      --bg-nav: rgba(255,255,255,0.95);
+      --bg-panel: rgba(0,0,0,0.02);
+      --gold: #4a6741;
+      --gold-light: #2c4a24;
+      --gold-dim: #6b8c63;
+      --text: #121212;
+      --text-dim: #6b6b6b;
+      --text-bn: #1a1a1a;
+      --text-en: #2c2c2c;
+      --text-active: #000000;
+      --border: rgba(0,0,0,0.1);
+      --border-active: #4a6741;
+      --highlight: rgba(74,103,65,0.06);
+      --btn-active-bg: rgba(74,103,65,0.12);
+      --btn-active-border: rgba(74,103,65,0.3);
+      --btn-inactive-border: rgba(0,0,0,0.12);
+      --btn-inactive-color: #888;
+      --controls-bg: rgba(0,0,0,0.04);
+      --id-color: #999;
+      --scrollbar-thumb: rgba(0,0,0,0.15);
+      --card-hover-border: rgba(74,103,65,0.4);
+      --card-hover-bg: rgba(74,103,65,0.03);
+    }
+
+    /* --- Theme 3: Sepia --- */
+    [data-theme="sepia"] {
+      --bg: #F4ECD8;
+      --bg2: #ede4cc;
+      --bg-nav: rgba(244,236,216,0.95);
+      --bg-panel: rgba(91,70,54,0.04);
+      --gold: #8B5E3C;
+      --gold-light: #5B4636;
+      --gold-dim: #9e7a5a;
+      --text: #5B4636;
+      --text-dim: #8a7a6a;
+      --text-bn: #4a3828;
+      --text-en: #5B4636;
+      --text-active: #3a2818;
+      --border: rgba(91,70,54,0.15);
+      --border-active: #8B5E3C;
+      --highlight: rgba(139,94,60,0.08);
+      --btn-active-bg: rgba(139,94,60,0.15);
+      --btn-active-border: rgba(139,94,60,0.35);
+      --btn-inactive-border: rgba(91,70,54,0.15);
+      --btn-inactive-color: #9e7a5a;
+      --controls-bg: rgba(91,70,54,0.06);
+      --id-color: #b09878;
+      --scrollbar-thumb: rgba(91,70,54,0.2);
+      --card-hover-border: rgba(139,94,60,0.4);
+      --card-hover-bg: rgba(139,94,60,0.05);
+    }
+
+    /* --- Theme 4: Dark --- */
+    [data-theme="dark"] {
+      --bg: #1A1A2E;
+      --bg2: #22223a;
+      --bg-nav: rgba(26,26,46,0.95);
+      --bg-panel: rgba(255,255,255,0.03);
+      --gold: #7CB3F0;
+      --gold-light: #a8d0ff;
+      --gold-dim: #5a8abf;
+      --text: #D4D4D8;
+      --text-dim: #7a7a8e;
+      --text-bn: #d8d8dc;
+      --text-en: #c8c8d0;
+      --text-active: #ffffff;
+      --border: rgba(124,179,240,0.12);
+      --border-active: #7CB3F0;
+      --highlight: rgba(124,179,240,0.07);
+      --btn-active-bg: rgba(124,179,240,0.15);
+      --btn-active-border: rgba(124,179,240,0.35);
+      --btn-inactive-border: rgba(124,179,240,0.12);
+      --btn-inactive-color: #5a8abf;
+      --controls-bg: rgba(0,0,0,0.3);
+      --id-color: #5a8abf;
+      --scrollbar-thumb: rgba(124,179,240,0.15);
+      --card-hover-border: rgba(124,179,240,0.4);
+      --card-hover-bg: rgba(124,179,240,0.04);
+    }
+
+    /* --- Theme 5: True Black (OLED) --- */
+    [data-theme="true-black"] {
+      --bg: #000000;
+      --bg2: #0a0a0a;
+      --bg-nav: rgba(0,0,0,0.95);
+      --bg-panel: rgba(255,255,255,0.03);
+      --gold: #6EA8D9;
+      --gold-light: #90c4f0;
+      --gold-dim: #4a7aa0;
+      --text: #C8C8C8;
+      --text-dim: #666666;
+      --text-bn: #cccccc;
+      --text-en: #b8b8b8;
+      --text-active: #e8e8e8;
+      --border: rgba(110,168,217,0.1);
+      --border-active: #6EA8D9;
+      --highlight: rgba(110,168,217,0.06);
+      --btn-active-bg: rgba(110,168,217,0.12);
+      --btn-active-border: rgba(110,168,217,0.3);
+      --btn-inactive-border: rgba(110,168,217,0.1);
+      --btn-inactive-color: #4a7aa0;
+      --controls-bg: rgba(255,255,255,0.04);
+      --id-color: #4a7aa0;
+      --scrollbar-thumb: rgba(110,168,217,0.15);
+      --card-hover-border: rgba(110,168,217,0.3);
+      --card-hover-bg: rgba(110,168,217,0.04);
+    }
+
+    /* --- Theme 6: Forest --- */
+    [data-theme="forest"] {
+      --bg: #1A2A1A;
+      --bg2: #223222;
+      --bg-nav: rgba(26,42,26,0.95);
+      --bg-panel: rgba(168,200,168,0.03);
+      --gold: #6BBF6B;
+      --gold-light: #a8d8a8;
+      --gold-dim: #5a9a5a;
+      --text: #A8C8A8;
+      --text-dim: #6a8a6a;
+      --text-bn: #b0d0b0;
+      --text-en: #98b898;
+      --text-active: #d0f0d0;
+      --border: rgba(107,191,107,0.12);
+      --border-active: #6BBF6B;
+      --highlight: rgba(107,191,107,0.07);
+      --btn-active-bg: rgba(107,191,107,0.15);
+      --btn-active-border: rgba(107,191,107,0.35);
+      --btn-inactive-border: rgba(107,191,107,0.12);
+      --btn-inactive-color: #5a9a5a;
+      --controls-bg: rgba(0,0,0,0.3);
+      --id-color: #5a9a5a;
+      --scrollbar-thumb: rgba(107,191,107,0.15);
+      --card-hover-border: rgba(107,191,107,0.4);
+      --card-hover-bg: rgba(107,191,107,0.04);
+    }
+
+    /* --- Theme 7: Sunset Rose --- */
+    [data-theme="sunset-rose"] {
+      --bg: #2B1D1D;
+      --bg2: #352525;
+      --bg-nav: rgba(43,29,29,0.95);
+      --bg-panel: rgba(212,136,107,0.03);
+      --gold: #D4896B;
+      --gold-light: #e8b8a0;
+      --gold-dim: #a06848;
+      --text: #D4B8A0;
+      --text-dim: #8a6a55;
+      --text-bn: #dcc0a8;
+      --text-en: #c8a890;
+      --text-active: #f0d8c0;
+      --border: rgba(212,137,107,0.12);
+      --border-active: #D4896B;
+      --highlight: rgba(212,137,107,0.07);
+      --btn-active-bg: rgba(212,137,107,0.15);
+      --btn-active-border: rgba(212,137,107,0.35);
+      --btn-inactive-border: rgba(212,137,107,0.12);
+      --btn-inactive-color: #a06848;
+      --controls-bg: rgba(0,0,0,0.3);
+      --id-color: #a06848;
+      --scrollbar-thumb: rgba(212,137,107,0.15);
+      --card-hover-border: rgba(212,137,107,0.4);
+      --card-hover-bg: rgba(212,137,107,0.04);
+    }
+
+    /* ======================================================== */
+
     html { scroll-behavior: smooth; }
     body {
       background: var(--bg);
@@ -45,8 +248,9 @@ const base = import.meta.env.BASE_URL;
       font-family: var(--font-en);
       min-height: 100vh;
       line-height: 1.7;
+      transition: background 0.3s ease, color 0.3s ease;
     }
-    a { color: var(--gold); text-decoration: none; }
+    a { color: var(--gold); text-decoration: none; transition: color 0.2s; }
     a:hover { color: var(--gold-light); }
     .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
 
@@ -55,8 +259,9 @@ const base = import.meta.env.BASE_URL;
       border-bottom: 1px solid var(--border);
       padding: 0 24px;
       position: sticky; top: 0; z-index: 100;
-      background: rgba(18,16,14,0.95);
+      background: var(--bg-nav);
       backdrop-filter: blur(8px);
+      transition: background 0.3s ease, border-color 0.3s ease;
     }
     .nav-inner {
       max-width: 1100px; margin: 0 auto;
@@ -68,9 +273,40 @@ const base = import.meta.env.BASE_URL;
       letter-spacing: 0.02em;
     }
     .nav-brand span { font-family: var(--font-bn); font-size: 1rem; opacity: 0.7; margin-left: 8px; }
-    .nav-links { display: flex; gap: 28px; font-size: 0.85rem; letter-spacing: 0.05em; }
+    .nav-links { display: flex; gap: 20px; font-size: 0.85rem; letter-spacing: 0.05em; align-items: center; }
     .nav-links a { color: var(--gold-dim); }
     .nav-links a:hover { color: var(--gold-light); }
+
+    /* THEME SWITCHER */
+    .theme-switcher {
+      display: flex; align-items: center; gap: 5px;
+      margin-left: 8px;
+      padding-left: 16px;
+      border-left: 1px solid var(--border);
+    }
+    .theme-dot {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+      position: relative;
+    }
+    .theme-dot:hover {
+      transform: scale(1.2);
+    }
+    .theme-dot[data-active="true"] {
+      border-color: var(--gold-light);
+      box-shadow: 0 0 6px rgba(255,255,255,0.2);
+      transform: scale(1.15);
+    }
+    .theme-dot[data-theme-id="antique-gold"] { background: linear-gradient(135deg, #12100e, #c8a050); }
+    .theme-dot[data-theme-id="classic-white"] { background: linear-gradient(135deg, #ffffff, #e0e0e0); }
+    .theme-dot[data-theme-id="sepia"] { background: linear-gradient(135deg, #F4ECD8, #8B5E3C); }
+    .theme-dot[data-theme-id="dark"] { background: linear-gradient(135deg, #1A1A2E, #7CB3F0); }
+    .theme-dot[data-theme-id="true-black"] { background: linear-gradient(135deg, #000000, #6EA8D9); }
+    .theme-dot[data-theme-id="forest"] { background: linear-gradient(135deg, #1A2A1A, #6BBF6B); }
+    .theme-dot[data-theme-id="sunset-rose"] { background: linear-gradient(135deg, #2B1D1D, #D4896B); }
 
     /* FOOTER */
     footer {
@@ -80,6 +316,7 @@ const base = import.meta.env.BASE_URL;
       font-size: 0.8rem;
       color: var(--text-dim);
       letter-spacing: 0.05em;
+      transition: border-color 0.3s ease, color 0.3s ease;
     }
 
     /* SEARCH */
@@ -89,6 +326,13 @@ const base = import.meta.env.BASE_URL;
       border: 1px solid var(--border) !important;
       color: var(--text) !important;
       border-radius: 2px !important;
+    }
+
+    /* Responsive: collapse theme dots on small screens */
+    @media (max-width: 600px) {
+      .nav-links { gap: 14px; }
+      .theme-switcher { padding-left: 10px; gap: 4px; }
+      .theme-dot { width: 14px; height: 14px; }
     }
   </style>
 </head>
@@ -102,6 +346,15 @@ const base = import.meta.env.BASE_URL;
         <a href={`${base}/books`}>Books</a>
         <a href={`${base}/authors`}>Authors</a>
         <a href={`${base}/about`}>About</a>
+        <div class="theme-switcher" id="theme-switcher">
+          <div class="theme-dot" data-theme-id="antique-gold" title="Antique Gold"></div>
+          <div class="theme-dot" data-theme-id="classic-white" title="Classic White"></div>
+          <div class="theme-dot" data-theme-id="sepia" title="Sepia"></div>
+          <div class="theme-dot" data-theme-id="dark" title="Dark"></div>
+          <div class="theme-dot" data-theme-id="true-black" title="True Black"></div>
+          <div class="theme-dot" data-theme-id="forest" title="Forest"></div>
+          <div class="theme-dot" data-theme-id="sunset-rose" title="Sunset Rose"></div>
+        </div>
       </div>
     </div>
   </nav>
@@ -112,5 +365,31 @@ const base = import.meta.env.BASE_URL;
     <div>বাংলা পাঠাগার · Bangla Library — A free bilingual digital library of classical Bengali literature</div>
     <div style="margin-top:8px; opacity:0.6;">All texts are in the public domain · Built with Astro + React</div>
   </footer>
+
+  <!-- Theme switcher logic -->
+  <script is:inline>
+    (function(){
+      var STORAGE_KEY = 'bl-theme';
+      var dots = document.querySelectorAll('.theme-dot');
+      var current = document.documentElement.getAttribute('data-theme') || 'antique-gold';
+
+      function setTheme(id) {
+        document.documentElement.setAttribute('data-theme', id);
+        localStorage.setItem(STORAGE_KEY, id);
+        current = id;
+        dots.forEach(function(d) {
+          d.setAttribute('data-active', d.getAttribute('data-theme-id') === id ? 'true' : 'false');
+        });
+      }
+
+      // Mark initial active dot
+      dots.forEach(function(d) {
+        d.setAttribute('data-active', d.getAttribute('data-theme-id') === current ? 'true' : 'false');
+        d.addEventListener('click', function() {
+          setTheme(d.getAttribute('data-theme-id'));
+        });
+      });
+    })();
+  </script>
 </body>
 </html>

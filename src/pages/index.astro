@@ -17,7 +17,7 @@ const byCategory = books.reduce((acc, book) => {
   <main>
     <!-- Hero -->
     <section style="padding: 80px 24px 60px; text-align: center; border-bottom: 1px solid var(--border); position: relative; overflow: hidden;">
-      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center top, rgba(200,160,80,0.06) 0%, transparent 70%);pointer-events:none;"></div>
+      <div class="hero-glow"></div>
       <div style="font-size:0.7rem;letter-spacing:0.35em;color:var(--gold);text-transform:uppercase;margin-bottom:20px;opacity:0.8;">
         Free · Bilingual · Classical
       </div>
@@ -40,10 +40,10 @@ const byCategory = books.reduce((acc, book) => {
         });
       </script>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-        <a href={`${base}/books`} style="padding:12px 28px;border:1px solid var(--gold);color:var(--gold-light);font-size:0.9rem;letter-spacing:0.08em;transition:all 0.2s;" onmouseover="this.style.background='rgba(200,160,80,0.1)'" onmouseout="this.style.background='transparent'">
+        <a href={`${base}/books`} class="hero-btn hero-btn-primary">
           Browse All Books
         </a>
-        <a href={`${base}/authors`} style="padding:12px 28px;border:1px solid var(--border);color:var(--gold-dim);font-size:0.9rem;letter-spacing:0.08em;transition:all 0.2s;" onmouseover="this.style.background='rgba(200,160,80,0.05)'" onmouseout="this.style.background='transparent'">
+        <a href={`${base}/authors`} class="hero-btn hero-btn-secondary">
           By Author
         </a>
       </div>
@@ -76,7 +76,7 @@ const byCategory = books.reduce((acc, book) => {
             </div>
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
               {catBooks.map(book => (
-                <a href={`${base}/books/${book.id}`} style="display:block;padding:24px;border:1px solid var(--border);background:rgba(255,255,255,0.02);transition:all 0.25s;text-decoration:none;" onmouseover="this.style.borderColor='rgba(200,160,80,0.4)';this.style.background='rgba(200,160,80,0.04)'" onmouseout="this.style.borderColor='rgba(200,160,80,0.15)';this.style.background='rgba(255,255,255,0.02)'">
+                <a href={`${base}/books/${book.id}`} class="book-card">
                   <div style="font-size:1.3rem;font-family:var(--font-bn);color:var(--gold-light);margin-bottom:4px;">{book.data.title_bn}</div>
                   <div style="font-size:0.9rem;color:var(--gold);margin-bottom:12px;font-style:italic;">{book.data.title_en}</div>
                   <div style="font-size:0.78rem;color:var(--text-dim);">
@@ -88,7 +88,7 @@ const byCategory = books.reduce((acc, book) => {
                     </div>
                   )}
                   <div style="margin-top:14px;font-size:0.72rem;letter-spacing:0.1em;color:var(--gold-dim);">
-                    {book.data.paragraphs.length} passages · Read →
+                    {book.data.paragraphs.length} passages · Read &rarr;
                   </div>
                 </a>
               ))}
@@ -99,3 +99,44 @@ const byCategory = books.reduce((acc, book) => {
     </section>
   </main>
 </Base>
+
+<style>
+  .hero-glow {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center top, var(--card-hover-bg) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-btn {
+    padding: 12px 28px;
+    font-size: 0.9rem;
+    letter-spacing: 0.08em;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .hero-btn-primary {
+    border: 1px solid var(--gold);
+    color: var(--gold-light);
+  }
+  .hero-btn-primary:hover {
+    background: var(--btn-active-bg);
+  }
+  .hero-btn-secondary {
+    border: 1px solid var(--border);
+    color: var(--gold-dim);
+  }
+  .hero-btn-secondary:hover {
+    background: var(--card-hover-bg);
+  }
+  .book-card {
+    display: block;
+    padding: 24px;
+    border: 1px solid var(--border);
+    background: var(--bg-panel);
+    transition: all 0.25s;
+    text-decoration: none;
+  }
+  .book-card:hover {
+    border-color: var(--card-hover-border) !important;
+    background: var(--card-hover-bg) !important;
+  }
+</style>
