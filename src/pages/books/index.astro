@@ -8,7 +8,11 @@ const base = import.meta.env.BASE_URL;
 const categories = [...new Set(books.map(b => b.data.category))];
 ---
 
-<Base title="All Books" description="Browse all classical Bangla books with English translations.">
+<Base
+  title="All Books"
+  description="Browse all classical Bangla books with English translations. Find novels, poetry, and essays by renowned Bengali authors in our bilingual library."
+  canonicalPath="/books/"
+>
   <main style="padding: 60px 24px;">
     <div class="container">
 

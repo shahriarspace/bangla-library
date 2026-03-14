@@ -12,11 +12,66 @@ const { slug } = Astro.params;
 const entry = await getEntry('books', slug);
 const book = entry.data;
 const base = import.meta.env.BASE_URL;
+
+const bookDescription = book.description_en
+  || `Read ${book.title_en} by ${book.author_en} in Bangla and English — side-by-side bilingual reading with ${book.paragraphs.length} passages.`;
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Book",
+    "name": book.title_en,
+    "alternateName": book.title_bn,
+    "author": {
+      "@type": "Person",
+      "name": book.author_en,
+      "alternateName": book.author_bn,
+    },
+    "datePublished": book.year,
+    "inLanguage": ["bn", "en"],
+    "genre": book.category,
+    "description": bookDescription,
+    "url": `https://shahriarspace.github.io/bangla-library/books/${slug}/`,
+    "isAccessibleForFree": true,
+    "publisher": {
+      "@type": "Organization",
+      "name": "Bangla Library",
+    },
+    "numberOfPages": Math.ceil(book.paragraphs.length / 12),
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://shahriarspace.github.io/bangla-library/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Books",
+        "item": "https://shahriarspace.github.io/bangla-library/books/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": book.title_en,
+        "item": `https://shahriarspace.github.io/bangla-library/books/${slug}/`
+      }
+    ]
+  }
+];
 ---
 
 <Base
-  title={`${book.title_en} · ${book.title_bn}`}
-  description={book.description_en || `Read ${book.title_en} by ${book.author_en} in Bangla and English.`}
+  title={`${book.title_en} by ${book.author_en}`}
+  description={bookDescription}
+  ogType="book"
+  canonicalPath={`/books/${slug}/`}
+  jsonLd={jsonLd}
 >
   <main>
 
@@ -28,7 +83,7 @@ const base = import.meta.env.BASE_URL;
         <span style="margin:0 8px;opacity:0.4;">&middot;</span>
         {book.category}
       </div>
-      <h1 style="font-family:var(--font-bn);font-size:clamp(1.8rem,4vw,3rem);color:var(--gold-light);font-weight:600;margin-bottom:8px;">
+      <h1 style="font-family:var(--font-bn);font-size:clamp(1.8rem,4vw,3rem);color:var(--gold-light);font-weight:600;margin-bottom:8px;" lang="bn">
         {book.title_bn}
       </h1>
       <h2 style="font-size:clamp(1rem,2vw,1.4rem);color:var(--gold);font-weight:400;font-style:italic;margin-bottom:20px;">
@@ -49,8 +104,9 @@ const base = import.meta.env.BASE_URL;
       <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:28px auto 0;"></div>
     </section>
 
-    <!-- SEO-visible text (hidden visually, fully crawlable by Google) -->
-    <div style="display:none;" aria-hidden="true" data-pagefind-body>
+    <!-- SEO-visible text (visually hidden but crawlable by search engines) -->
+    <div class="sr-only" data-pagefind-body>
+      <h2>{book.title_en} - {book.title_bn} by {book.author_en}</h2>
       {book.paragraphs.map(p => (
         <div>
           <p lang="bn">{p.bn}</p>
@@ -90,5 +146,16 @@ const base = import.meta.env.BASE_URL;
     position: absolute; inset: 0;
     background: radial-gradient(ellipse at center top, var(--card-hover-bg) 0%, transparent 65%);
     pointer-events: none;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
   }
 </style>

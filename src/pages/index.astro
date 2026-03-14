@@ -12,8 +12,28 @@ const byCategory = books.reduce((acc, book) => {
   acc[cat].push(book);
   return acc;
 }, {} as Record<string, typeof books>);
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Bangla Library",
+  "alternateName": "বাংলা পাঠাগার",
+  "url": "https://shahriarspace.github.io/bangla-library/",
+  "description": "A free bilingual digital library of classical Bangla literature with side-by-side English translations.",
+  "inLanguage": ["en", "bn"],
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://shahriarspace.github.io/bangla-library/books/?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+};
 ---
-<Base title="Home">
+<Base
+  title="Home"
+  description="Bangla Library: Read classical Bengali literature with parallel English translations. Free bilingual digital library featuring Rabindranath Tagore, Bankim Chandra, Humayun Ahmed, and more."
+  canonicalPath="/"
+  jsonLd={jsonLd}
+>
   <main>
     <!-- Hero -->
     <section style="padding: 80px 24px 60px; text-align: center; border-bottom: 1px solid var(--border); position: relative; overflow: hidden;">
@@ -21,7 +41,7 @@ const byCategory = books.reduce((acc, book) => {
       <div style="font-size:0.7rem;letter-spacing:0.35em;color:var(--gold);text-transform:uppercase;margin-bottom:20px;opacity:0.8;">
         Free · Bilingual · Classical
       </div>
-      <h1 style="font-size:clamp(2rem,5vw,3.5rem);color:var(--gold-light);font-weight:400;margin-bottom:12px;line-height:1.2;">
+      <h1 style="font-size:clamp(2rem,5vw,3.5rem);color:var(--gold-light);font-weight:400;margin-bottom:12px;line-height:1.2;" lang="bn">
         বাংলা পাঠাগার
       </h1>
       <h2 style="font-size:clamp(1rem,2.5vw,1.5rem);color:var(--gold);font-weight:400;margin-bottom:24px;letter-spacing:0.1em;">

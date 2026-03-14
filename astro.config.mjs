@@ -1,9 +1,10 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
+import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
-  site: 'https://yourusername.github.io',
+  site: 'https://shahriarspace.github.io',
   base: '/bangla-library',
-  integrations: [react()],
+  integrations: [react(), sitemap()],
   output: 'static',
 });

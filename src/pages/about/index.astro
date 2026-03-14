@@ -1,8 +1,22 @@
 ---
 import Base from '../../layouts/Base.astro';
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Bangla Library",
+  "alternateName": "বাংলা পাঠাগার",
+  "url": "https://shahriarspace.github.io/bangla-library/",
+  "description": "A free bilingual digital library of classical Bengali literature with side-by-side English translations.",
+};
 ---
 
-<Base title="About" description="About Bangla Library — a free bilingual digital library of classical Bengali literature.">
+<Base
+  title="About"
+  description="About Bangla Library — a free, open-source bilingual digital library making classical Bengali literature accessible worldwide with parallel English translations."
+  canonicalPath="/about/"
+  jsonLd={jsonLd}
+>
   <main style="padding: 60px 24px;">
     <div class="container" style="max-width:700px;margin:0 auto;">
 

@@ -3,21 +3,74 @@ interface Props {
   title: string;
   description?: string;
   ogImage?: string;
+  ogType?: string;
+  canonicalPath?: string;
+  jsonLd?: Record<string, any> | Record<string, any>[];
+  extraLang?: string;
 }
-const { title, description = 'A bilingual digital library of classical Bangla literature with English translations.', ogImage } = Astro.props;
+const {
+  title,
+  description = 'A free bilingual digital library of classical Bangla literature with side-by-side English translations. Read Rabindranath Tagore, Bankim Chandra, and more.',
+  ogImage,
+  ogType = 'website',
+  canonicalPath,
+  jsonLd,
+  extraLang,
+} = Astro.props;
 const base = import.meta.env.BASE_URL;
+const siteUrl = 'https://shahriarspace.github.io/bangla-library';
+const fullTitle = `${title} | Bangla Library`;
+const canonicalUrl = canonicalPath ? `${siteUrl}${canonicalPath}` : `${siteUrl}${Astro.url.pathname}`;
 ---
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{title} · বাংলা পাঠাগার</title>
+
+  <!-- Primary Meta Tags -->
+  <title>{fullTitle}</title>
+  <meta name="title" content={fullTitle} />
   <meta name="description" content={description} />
-  <meta property="og:title" content={title} />
+  <meta name="robots" content="index, follow" />
+  <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+  <link rel="canonical" href={canonicalUrl} />
+
+  <!-- Language alternates -->
+  <link rel="alternate" hreflang="en" href={canonicalUrl} />
+  <link rel="alternate" hreflang="bn" href={canonicalUrl} />
+  <link rel="alternate" hreflang="x-default" href={canonicalUrl} />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content={ogType} />
+  <meta property="og:url" content={canonicalUrl} />
+  <meta property="og:title" content={fullTitle} />
   <meta property="og:description" content={description} />
+  <meta property="og:site_name" content="Bangla Library" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:locale:alternate" content="bn_BD" />
   {ogImage && <meta property="og:image" content={ogImage} />}
-  <meta property="og:type" content="website" />
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content={canonicalUrl} />
+  <meta name="twitter:title" content={fullTitle} />
+  <meta name="twitter:description" content={description} />
+  {ogImage && <meta name="twitter:image" content={ogImage} />}
+
+  <!-- Additional SEO -->
+  <meta name="author" content="Bangla Library" />
+  <meta name="theme-color" content="#12100e" />
+  <meta name="keywords" content="bangla literature, bengali books, bangla to english translation, bilingual reading, rabindranath tagore, bankim chandra, bengali poetry, bangla novel, classical bengali literature, বাংলা সাহিত্য, বাংলা বই" />
+
+  <!-- Structured Data -->
+  {jsonLd && !Array.isArray(jsonLd) && (
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  )}
+  {jsonLd && Array.isArray(jsonLd) && jsonLd.map(ld => (
+    <script type="application/ld+json" set:html={JSON.stringify(ld)} />
+  ))}
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Noto+Serif+Bengali:wght@400;600&display=swap" rel="stylesheet" />
@@ -337,7 +390,7 @@ const base = import.meta.env.BASE_URL;
   </style>
 </head>
 <body>
-  <nav>
+  <nav aria-label="Main navigation">
     <div class="nav-inner">
       <a href={base || '/'} class="nav-brand">
         বাংলা পাঠাগার <span>Bangla Library</span>
@@ -362,8 +415,14 @@ const base = import.meta.env.BASE_URL;
   <slot />
 
   <footer>
-    <div>বাংলা পাঠাগার · Bangla Library — A free bilingual digital library of classical Bengali literature</div>
-    <div style="margin-top:8px; opacity:0.6;">All texts are in the public domain · Built with Astro + React</div>
+    <div>বাংলা পাঠাগার · <strong>Bangla Library</strong> — A free bilingual digital library of classical Bengali literature</div>
+    <div style="margin-top:8px; opacity:0.6;">All texts are in the public domain · Built with <a href="https://astro.build" rel="noopener">Astro</a> + <a href="https://react.dev" rel="noopener">React</a></div>
+    <nav style="margin-top:12px; font-size:0.75rem; opacity:0.5;" aria-label="Footer navigation">
+      <a href={base || '/'}>Home</a> ·
+      <a href={`${base}/books`}>Books</a> ·
+      <a href={`${base}/authors`}>Authors</a> ·
+      <a href={`${base}/about`}>About</a>
+    </nav>
   </footer>
 
   <!-- Theme switcher logic -->

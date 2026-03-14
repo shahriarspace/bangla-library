@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://shahriarspace.github.io/bangla-library/sitemap-index.xml
