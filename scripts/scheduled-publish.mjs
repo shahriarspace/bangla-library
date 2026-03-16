@@ -14,7 +14,7 @@
  *
  * Environment variables:
  *   GITHUB_REPO       - e.g. "shahriarspace/bangla-library"
- *   BOT_GITHUB_TOKEN  - banglalib-bot personal access token (public_repo + write:discussion)
+ *   BOT_GITHUB_TOKEN  - Fine-grained PAT (secret: BOT_PAT) with Contents, Issues, Discussions R/W
  */
 
 import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
