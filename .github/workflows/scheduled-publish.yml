@@ -1,0 +1,53 @@
+name: Scheduled Book Publishing
+
+on:
+  schedule:
+    - cron: '0 6 * * *'    # 6:00am UTC daily
+  workflow_dispatch:         # Manual trigger for testing
+
+permissions:
+  contents: write            # Needed to commit status changes
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run publish script
+        id: publish
+        env:
+          BOT_GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
+          GITHUB_REPO: shahriarspace/bangla-library
+        run: |
+          node scripts/scheduled-publish.mjs
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: Commit published books
+        if: steps.publish.outputs.exit_code == '1'
+        run: |
+          git config user.name "Bangla Library Bot"
+          git config user.email "bot@banglalib.org"
+          git add src/content/books/*.json
+          git add data/coming-soon.json || true
+          git commit -m "publish: scheduled release $(date -u +%Y-%m-%d)"
+          git push
+
+      - name: Nothing to publish
+        if: steps.publish.outputs.exit_code == '0'
+        run: echo "No books due today — nothing to do."
+
+      - name: Script error
+        if: steps.publish.outputs.exit_code == '2'
+        run: |
+          echo "Publish script encountered an error!"
+          exit 1

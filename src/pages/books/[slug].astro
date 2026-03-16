@@ -1,8 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import BilingualReader from '../../components/BilingualReader.jsx';
-import LikeButton from '../../components/LikeButton.jsx';
-import Giscus from '../../components/Giscus.astro';
+import InteractionIsland from '../../components/InteractionIsland.jsx';
 import { getCollection, getEntry } from 'astro:content';
 
 export async function getStaticPaths() {
@@ -98,10 +97,6 @@ const jsonLd = [
         <span style="margin:0 10px;opacity:0.3;">&middot;</span>
         {book.year}
       </div>
-      <!-- Like / Heart button (Giscus reactions) -->
-      <div style="margin-top:16px;">
-        <LikeButton client:idle />
-      </div>
       {book.description_en && (
         <p style="max-width:600px;margin:20px auto 0;font-size:0.88rem;color:var(--text-dim);line-height:1.8;">
           {book.description_en}
@@ -140,8 +135,14 @@ const jsonLd = [
       </div>
     </section>
 
-    <!-- Comments & Reactions (Giscus) -->
-    <Giscus term={`book/${slug}`} />
+    <!-- Interaction Island: Likes + Comments + Giscus (React Island) -->
+    <InteractionIsland
+      client:load
+      slug={slug}
+      bookTitle={book.title_en}
+      initialLikes={0}
+      initialReads={0}
+    />
 
     <!-- Related / nav -->
     <section style="padding: 0 24px 60px;">
@@ -227,64 +228,3 @@ const jsonLd = [
   }
 </style>
 
-<!-- LikeButton styles (global so they reach the React island) -->
-<style is:global>
-  .like-button {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 18px;
-    border-radius: 24px;
-    border: 1px solid var(--border);
-    background: var(--bg-panel);
-    color: var(--gold-dim);
-    font-family: var(--font-en);
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    letter-spacing: 0.03em;
-    position: relative;
-    z-index: 1;
-  }
-  .like-button:hover {
-    border-color: var(--border-active);
-    color: var(--gold);
-    background: var(--btn-active-bg);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-  }
-  .like-button:active {
-    transform: translateY(0);
-  }
-  .like-button__heart {
-    transition: transform 0.25s ease, color 0.25s ease;
-  }
-  .like-button:hover .like-button__heart {
-    color: #e25555;
-    fill: rgba(226, 85, 85, 0.15);
-  }
-  .like-button__count {
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    min-width: 1ch;
-  }
-  /* Pulse animation */
-  .like-button--pulse .like-button__heart {
-    animation: like-pulse 0.6s ease;
-    color: #e25555;
-    fill: rgba(226, 85, 85, 0.25);
-  }
-  @keyframes like-pulse {
-    0% { transform: scale(1); }
-    25% { transform: scale(1.35); }
-    50% { transform: scale(0.95); }
-    75% { transform: scale(1.15); }
-    100% { transform: scale(1); }
-  }
-  @media (max-width: 768px) {
-    .like-button {
-      padding: 10px 20px;
-      min-height: 44px;
-    }
-  }
-</style>

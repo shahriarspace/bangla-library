@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import FeedbackPopover from './FeedbackPopover.jsx';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -353,14 +354,17 @@ function ContinueReadingToast({ paragraphId, onContinue, onDismiss }) {
 // ---------------------------------------------------------------------------
 // Paragraph Feedback Icon
 // ---------------------------------------------------------------------------
-function FeedbackIcon({ paragraphId, isMobile, isHovered }) {
+function FeedbackIcon({ paragraphId, isMobile, isHovered, onOpenFeedback, paragraphBn, paragraphEn }) {
   const [submitted, setSubmitted] = useState(false);
 
   const handleClick = (e) => {
     e.stopPropagation();
     if (submitted) return;
-    // Future: open FeedbackPopover
-    setSubmitted(true);
+    if (onOpenFeedback) {
+      onOpenFeedback({ paragraphId, paragraphBn, paragraphEn });
+    } else {
+      setSubmitted(true);
+    }
   };
 
   // Desktop: only visible on hover. Mobile: always visible
@@ -397,7 +401,7 @@ function FeedbackIcon({ paragraphId, isMobile, isHovered }) {
 // ---------------------------------------------------------------------------
 // Paragraph Wrapper (adds anchor id, feedback icon, hover state)
 // ---------------------------------------------------------------------------
-function ParagraphWrapper({ paragraphId, isMobile, children }) {
+function ParagraphWrapper({ paragraphId, isMobile, children, onOpenFeedback, paragraphBn, paragraphEn }) {
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -409,7 +413,14 @@ function ParagraphWrapper({ paragraphId, isMobile, children }) {
       onMouseLeave={() => !isMobile && setHovered(false)}
     >
       {children}
-      <FeedbackIcon paragraphId={paragraphId} isMobile={isMobile} isHovered={hovered} />
+      <FeedbackIcon
+        paragraphId={paragraphId}
+        isMobile={isMobile}
+        isHovered={hovered}
+        onOpenFeedback={onOpenFeedback}
+        paragraphBn={paragraphBn}
+        paragraphEn={paragraphEn}
+      />
     </div>
   );
 }
@@ -615,14 +626,14 @@ function navBtnStyle(disabled, isMobile) {
 // ---------------------------------------------------------------------------
 // Mode 1: Book (Interleaved)
 // ---------------------------------------------------------------------------
-function BookMode({ paragraphs, activeId, setActiveId, fontSize, containerRef, isMobile }) {
+function BookMode({ paragraphs, activeId, setActiveId, fontSize, containerRef, isMobile, onOpenFeedback }) {
   return (
     <div ref={containerRef} style={{
       maxWidth: '720px', margin: '0 auto',
       padding: '0 16px',
     }}>
       {paragraphs.map(p => (
-        <ParagraphWrapper key={p.id} paragraphId={p.id} isMobile={isMobile}>
+        <ParagraphWrapper key={p.id} paragraphId={p.id} isMobile={isMobile} onOpenFeedback={onOpenFeedback} paragraphBn={p.bn} paragraphEn={p.en}>
           <div
             onClick={() => setActiveId(activeId === p.id ? null : p.id)}
             style={{
@@ -673,14 +684,14 @@ function BookMode({ paragraphs, activeId, setActiveId, fontSize, containerRef, i
 // ---------------------------------------------------------------------------
 // Mode 1b: Book (stacked Both on mobile — bn then en per paragraph)
 // ---------------------------------------------------------------------------
-function MobileBothMode({ paragraphs, activeId, setActiveId, fontSize, containerRef, isMobile }) {
+function MobileBothMode({ paragraphs, activeId, setActiveId, fontSize, containerRef, isMobile, onOpenFeedback }) {
   return (
     <div ref={containerRef} style={{
       maxWidth: '720px', margin: '0 auto',
       padding: '0 12px',
     }}>
       {paragraphs.map(p => (
-        <ParagraphWrapper key={p.id} paragraphId={p.id} isMobile={isMobile}>
+        <ParagraphWrapper key={p.id} paragraphId={p.id} isMobile={isMobile} onOpenFeedback={onOpenFeedback} paragraphBn={p.bn} paragraphEn={p.en}>
           <div
             onClick={() => setActiveId(activeId === p.id ? null : p.id)}
             style={{
@@ -728,7 +739,7 @@ function MobileBothMode({ paragraphs, activeId, setActiveId, fontSize, container
 // ---------------------------------------------------------------------------
 // Mode 2: Paginated
 // ---------------------------------------------------------------------------
-function PaginatedMode({ paragraphs, page, totalPages, setPage, activeId, setActiveId, fontSize, containerRef, isMobile }) {
+function PaginatedMode({ paragraphs, page, totalPages, setPage, activeId, setActiveId, fontSize, containerRef, isMobile, onOpenFeedback }) {
   const start = (page - 1) * PARAS_PER_PAGE;
   const pageParagraphs = paragraphs.slice(start, start + PARAS_PER_PAGE);
 
@@ -756,7 +767,7 @@ function PaginatedMode({ paragraphs, page, totalPages, setPage, activeId, setAct
         padding: '8px 16px 40px',
       }}>
         {pageParagraphs.map(p => (
-          <ParagraphWrapper key={p.id} paragraphId={p.id} isMobile={isMobile}>
+          <ParagraphWrapper key={p.id} paragraphId={p.id} isMobile={isMobile} onOpenFeedback={onOpenFeedback} paragraphBn={p.bn} paragraphEn={p.en}>
             <div
               onClick={() => setActiveId(activeId === p.id ? null : p.id)}
               style={{
@@ -978,7 +989,7 @@ function SideMode({ paragraphs, activeId, setActiveId, fontSize, containerRef, i
 // ---------------------------------------------------------------------------
 // Mode 4 & 5: Single Language (Bangla Only / English Only)
 // ---------------------------------------------------------------------------
-function SingleLanguageMode({ paragraphs, lang, page, totalPages, setPage, activeId, setActiveId, fontSize, containerRef, isMobile }) {
+function SingleLanguageMode({ paragraphs, lang, page, totalPages, setPage, activeId, setActiveId, fontSize, containerRef, isMobile, onOpenFeedback }) {
   const start = (page - 1) * PARAS_PER_PAGE;
   const pageParagraphs = paragraphs.slice(start, start + PARAS_PER_PAGE);
   const isBn = lang === 'bn';
@@ -1016,7 +1027,7 @@ function SingleLanguageMode({ paragraphs, lang, page, totalPages, setPage, activ
         padding: '8px 16px 40px',
       }}>
         {pageParagraphs.map(p => (
-          <ParagraphWrapper key={p.id} paragraphId={p.id} isMobile={isMobile}>
+          <ParagraphWrapper key={p.id} paragraphId={p.id} isMobile={isMobile} onOpenFeedback={onOpenFeedback} paragraphBn={p.bn} paragraphEn={p.en}>
             <div
               onClick={() => setActiveId(activeId === p.id ? null : p.id)}
               style={{
@@ -1109,6 +1120,7 @@ export default function BilingualReader({ book, base = '' }) {
   const [activeId, setActiveId] = useState(null);
   const [progress, setProgress] = useState(0);
   const [toastData, setToastData] = useState(null);
+  const [feedbackPopover, setFeedbackPopover] = useState({ isOpen: false, paragraphId: null, paragraphBn: '', paragraphEn: '' });
   const containerRef = useRef(null);
   const progressTimerRef = useRef(null);
   const currentParaRef = useRef(null);
@@ -1120,6 +1132,15 @@ export default function BilingualReader({ book, base = '' }) {
     if (typeof window === 'undefined') return '';
     const parts = window.location.pathname.split('/').filter(Boolean);
     return parts[parts.length - 1] || '';
+  }, []);
+
+  // Feedback popover handlers
+  const openFeedback = useCallback(({ paragraphId, paragraphBn, paragraphEn }) => {
+    setFeedbackPopover({ isOpen: true, paragraphId, paragraphBn: paragraphBn || '', paragraphEn: paragraphEn || '' });
+  }, []);
+
+  const closeFeedback = useCallback(() => {
+    setFeedbackPopover({ isOpen: false, paragraphId: null, paragraphBn: '', paragraphEn: '' });
   }, []);
 
   // Wrapped setters that persist
@@ -1266,6 +1287,7 @@ export default function BilingualReader({ book, base = '' }) {
           fontSize={fontSize}
           containerRef={containerRef}
           isMobile={isMobile}
+          onOpenFeedback={openFeedback}
         />
       ) : (
         <>
@@ -1276,6 +1298,7 @@ export default function BilingualReader({ book, base = '' }) {
               fontSize={fontSize}
               containerRef={containerRef}
               isMobile={isMobile}
+              onOpenFeedback={openFeedback}
             />
           )}
 
@@ -1287,6 +1310,7 @@ export default function BilingualReader({ book, base = '' }) {
               fontSize={fontSize}
               containerRef={containerRef}
               isMobile={isMobile}
+              onOpenFeedback={openFeedback}
             />
           )}
 
@@ -1309,6 +1333,7 @@ export default function BilingualReader({ book, base = '' }) {
               fontSize={fontSize}
               containerRef={containerRef}
               isMobile={isMobile}
+              onOpenFeedback={openFeedback}
             />
           )}
         </>
@@ -1336,6 +1361,19 @@ export default function BilingualReader({ book, base = '' }) {
           to { transform: translateY(0); opacity: 1; }
         }
       `}</style>
+
+      {/* Feedback Popover */}
+      <FeedbackPopover
+        isOpen={feedbackPopover.isOpen}
+        onClose={closeFeedback}
+        paragraphId={feedbackPopover.paragraphId}
+        paragraphBn={feedbackPopover.paragraphBn}
+        paragraphEn={feedbackPopover.paragraphEn}
+        bookSlug={bookSlug}
+        bookTitle={book.title_en || book.title_bn || ''}
+        authorEn={book.author_en || ''}
+        isMobile={isMobileReader}
+      />
     </div>
   );
 }

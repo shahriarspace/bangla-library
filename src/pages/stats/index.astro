@@ -1,0 +1,425 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+import readsJson from '../../../data/analytics/reads.json';
+
+const base = import.meta.env.BASE_URL;
+
+// Get all published books
+const allBooks = await getCollection('books', ({ data }) => data.status === 'published');
+const allAuthors = await getCollection('authors');
+
+// Read analytics data
+const readsData = readsJson;
+
+// Compute stats
+const totalBooks = allBooks.length;
+const totalAuthors = allAuthors.length;
+const totalParagraphs = allBooks.reduce((sum, b) => sum + b.data.paragraphs.length, 0);
+
+// Categories
+const categoryMap = {};
+allBooks.forEach(b => {
+  const cat = b.data.category || 'Uncategorized';
+  categoryMap[cat] = (categoryMap[cat] || 0) + 1;
+});
+const categories = Object.entries(categoryMap)
+  .sort((a, b) => b[1] - a[1])
+  .map(([name, count]) => ({ name, count }));
+
+// Read counts per book (from analytics data, may be empty)
+const bookReads = allBooks.map(b => ({
+  slug: b.id,
+  title_bn: b.data.title_bn,
+  title_en: b.data.title_en,
+  author_en: b.data.author_en,
+  paragraphs: b.data.paragraphs.length,
+  reads: readsData.reads?.[b.id] || 0,
+  likes: readsData.likes?.[b.id] || 0,
+})).sort((a, b) => b.reads - a.reads || b.paragraphs - a.paragraphs);
+
+// Author stats
+const authorStats = {};
+allBooks.forEach(b => {
+  const name = b.data.author_en;
+  if (!authorStats[name]) {
+    authorStats[name] = { name, books: 0, reads: 0, paragraphs: 0 };
+  }
+  authorStats[name].books += 1;
+  authorStats[name].reads += readsData.reads?.[b.id] || 0;
+  authorStats[name].paragraphs += b.data.paragraphs.length;
+});
+const authorList = Object.values(authorStats).sort((a, b) => b.reads - a.reads || b.paragraphs - a.paragraphs);
+
+// Total reads
+const totalReads = Object.values(readsData.reads || {}).reduce((s, v) => s + v, 0);
+const totalLikes = Object.values(readsData.likes || {}).reduce((s, v) => s + v, 0);
+
+// For bar chart: compute max for scaling
+const maxReads = Math.max(...bookReads.map(b => b.reads), 1);
+const maxParas = Math.max(...bookReads.map(b => b.paragraphs), 1);
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Library Statistics",
+  "description": "Reading statistics for the Bangla Library — most read books, most read authors, and library overview.",
+  "url": "https://shahriarspace.github.io/bangla-library/stats/",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Bangla Library",
+    "url": "https://shahriarspace.github.io/bangla-library/"
+  }
+};
+---
+
+<Base
+  title="Statistics"
+  description="Library reading statistics — most read Bengali books, most popular authors, and a bird's-eye view of the Bangla Library collection."
+  canonicalPath="/stats/"
+  jsonLd={jsonLd}
+>
+  <main class="stats-main">
+    <div class="container">
+
+      <div class="stats-header">
+        <h1 class="stats-title-bn" lang="bn">পরিসংখ্যান</h1>
+        <h2 class="stats-title-en">Library Statistics</h2>
+        <div class="stats-divider"></div>
+      </div>
+
+      <!-- Library at a Glance -->
+      <section class="stats-section">
+        <h3 class="section-title">Library at a Glance</h3>
+        <div class="glance-grid">
+          <div class="glance-card">
+            <div class="glance-number">{totalBooks}</div>
+            <div class="glance-label">Books</div>
+          </div>
+          <div class="glance-card">
+            <div class="glance-number">{totalAuthors}</div>
+            <div class="glance-label">Authors</div>
+          </div>
+          <div class="glance-card">
+            <div class="glance-number">{totalParagraphs.toLocaleString()}</div>
+            <div class="glance-label">Passages</div>
+          </div>
+          <div class="glance-card">
+            <div class="glance-number">2</div>
+            <div class="glance-label">Languages</div>
+          </div>
+          {totalReads > 0 && (
+            <div class="glance-card">
+              <div class="glance-number">{totalReads.toLocaleString()}</div>
+              <div class="glance-label">Total Reads</div>
+            </div>
+          )}
+          {totalLikes > 0 && (
+            <div class="glance-card">
+              <div class="glance-number">{totalLikes.toLocaleString()}</div>
+              <div class="glance-label">Total Likes</div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <!-- Categories -->
+      <section class="stats-section">
+        <h3 class="section-title">Categories</h3>
+        <div class="category-list">
+          {categories.map(cat => (
+            <div class="category-chip">
+              <span class="category-name">{cat.name}</span>
+              <span class="category-count">{cat.count}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <!-- Books Chart -->
+      <section class="stats-section">
+        <h3 class="section-title">
+          {totalReads > 0 ? 'Most Read Books' : 'All Books'}
+        </h3>
+        <div class="chart-list">
+          {bookReads.map((book, i) => {
+            const barValue = totalReads > 0 ? book.reads : book.paragraphs;
+            const barMax = totalReads > 0 ? maxReads : maxParas;
+            const barPct = Math.max(barValue / barMax * 100, 3);
+            const metric = totalReads > 0
+              ? `${book.reads.toLocaleString()} readers`
+              : `${book.paragraphs} passages`;
+
+            return (
+              <a href={`${base}/books/${book.slug}`} class="chart-row">
+                <div class="chart-rank">{i + 1}.</div>
+                <div class="chart-info">
+                  <div class="chart-title">
+                    <span lang="bn">{book.title_bn}</span>
+                    <span class="chart-title-en">{book.title_en}</span>
+                  </div>
+                  <div class="chart-author">{book.author_en}</div>
+                  <div class="chart-bar-track">
+                    <div class="chart-bar-fill" style={`width: ${barPct}%`}></div>
+                  </div>
+                </div>
+                <div class="chart-metric">{metric}</div>
+              </a>
+            );
+          })}
+        </div>
+      </section>
+
+      <!-- Authors -->
+      <section class="stats-section">
+        <h3 class="section-title">
+          {totalReads > 0 ? 'Most Read Authors' : 'Authors'}
+        </h3>
+        <div class="chart-list">
+          {authorList.map((author, i) => {
+            const metric = totalReads > 0
+              ? `${author.reads.toLocaleString()} total readers`
+              : `${author.books} book${author.books !== 1 ? 's' : ''}, ${author.paragraphs} passages`;
+
+            return (
+              <div class="chart-row chart-row-static">
+                <div class="chart-rank">{i + 1}.</div>
+                <div class="chart-info">
+                  <div class="chart-title">{author.name}</div>
+                </div>
+                <div class="chart-metric">{metric}</div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <div class="stats-note">
+        <p>
+          Statistics computed at build time.
+          {totalReads === 0 && ' Reader counts will appear once analytics are active.'}
+        </p>
+      </div>
+
+    </div>
+  </main>
+</Base>
+
+<style>
+  .stats-main {
+    padding: 60px 24px;
+  }
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .stats-header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .stats-title-bn {
+    font-family: var(--font-bn);
+    font-size: 1.6rem;
+    color: var(--gold-light);
+    font-weight: 400;
+    margin-bottom: 4px;
+  }
+  .stats-title-en {
+    font-size: 1.1rem;
+    color: var(--gold);
+    font-weight: 400;
+    font-style: italic;
+    margin-bottom: 16px;
+  }
+  .stats-divider {
+    width: 40px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 0 auto;
+  }
+
+  /* Section titles */
+  .stats-section {
+    margin-bottom: 48px;
+  }
+  .section-title {
+    font-size: 0.78rem;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    text-transform: uppercase;
+    font-weight: 400;
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Glance cards */
+  .glance-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr));
+    gap: 12px;
+  }
+  .glance-card {
+    text-align: center;
+    padding: 24px 16px;
+    border: 1px solid var(--border);
+    background: var(--bg-panel);
+    transition: border-color 0.2s;
+  }
+  .glance-card:hover {
+    border-color: var(--card-hover-border);
+  }
+  .glance-number {
+    font-size: 2rem;
+    color: var(--gold-light);
+    font-weight: 600;
+    line-height: 1;
+    margin-bottom: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+  .glance-label {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* Categories */
+  .category-list {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .category-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    font-size: 0.82rem;
+    color: var(--text);
+  }
+  .category-count {
+    font-size: 0.68rem;
+    color: var(--gold);
+    font-weight: 600;
+  }
+
+  /* Chart rows */
+  .chart-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .chart-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    background: var(--bg-panel);
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.2s, background 0.2s;
+    min-height: 44px;
+  }
+  .chart-row:hover {
+    border-color: var(--card-hover-border);
+    background: var(--card-hover-bg);
+  }
+  .chart-row-static {
+    cursor: default;
+  }
+  .chart-rank {
+    font-size: 0.78rem;
+    color: var(--gold);
+    font-weight: 600;
+    width: 24px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .chart-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .chart-title {
+    font-size: 0.88rem;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .chart-title [lang="bn"] {
+    font-family: var(--font-bn);
+    margin-right: 6px;
+  }
+  .chart-title-en {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+  .chart-author {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+  .chart-bar-track {
+    height: 4px;
+    background: var(--border);
+    margin-top: 8px;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .chart-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+  .chart-metric {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Note */
+  .stats-note {
+    text-align: center;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .stats-note p {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+
+  @media (max-width: 768px) {
+    .stats-main {
+      padding: 40px 16px;
+    }
+    .glance-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .chart-row {
+      flex-wrap: wrap;
+    }
+    .chart-metric {
+      width: 100%;
+      text-align: right;
+      margin-top: 4px;
+    }
+  }
+  @media (max-width: 480px) {
+    .stats-main {
+      padding: 32px 12px;
+    }
+    .stats-title-bn {
+      font-size: 1.3rem;
+    }
+    .glance-number {
+      font-size: 1.6rem;
+    }
+  }
+</style>

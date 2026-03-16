@@ -1,0 +1,129 @@
+---
+import Base from '../../layouts/Base.astro';
+import RequestForm from '../../components/RequestForm.jsx';
+
+const base = import.meta.env.BASE_URL;
+
+// Fetch open book-request issues from GitHub at build time
+let openRequests = [];
+try {
+  const res = await fetch(
+    'https://api.github.com/repos/shahriarspace/bangla-library/issues?labels=book-request&state=open&per_page=50&sort=reactions-+1-desc',
+    {
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'User-Agent': 'bangla-library-astro-build',
+      },
+    }
+  );
+  if (res.ok) {
+    const issues = await res.json();
+    openRequests = issues.map(issue => ({
+      id: issue.id,
+      title: issue.title,
+      html_url: issue.html_url,
+      reactions: issue.reactions || {},
+      labels: issue.labels || [],
+    }));
+  }
+} catch {
+  // Build continues even if GitHub API is unreachable
+}
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Request a Book",
+  "description": "Suggest a Bengali book to be added to the Bangla Library with bilingual translation.",
+  "url": "https://shahriarspace.github.io/bangla-library/request/",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Bangla Library",
+    "url": "https://shahriarspace.github.io/bangla-library/"
+  }
+};
+---
+
+<Base
+  title="Request a Book"
+  description="Don't see a book you love? Request it here. We'll review and add it to the Bangla Library if it's in the public domain."
+  canonicalPath="/request/"
+  jsonLd={jsonLd}
+>
+  <main class="request-main">
+    <div class="container">
+
+      <div class="request-header">
+        <h1 lang="bn" class="request-title-bn">বই অনুরোধ করুন</h1>
+        <h2 class="request-title-en">Request a Book</h2>
+        <div class="request-divider"></div>
+        <p class="request-intro">
+          Don't see a book you love? Request it here.
+          We'll review it and add it to the library if it's in the public domain.
+        </p>
+      </div>
+
+      <RequestForm
+        client:load
+        workerUrl=""
+        initialRequests={openRequests}
+      />
+
+    </div>
+  </main>
+</Base>
+
+<style>
+  .request-main {
+    padding: 60px 24px;
+  }
+  .container {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  .request-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .request-title-bn {
+    font-family: var(--font-bn);
+    font-size: 1.6rem;
+    color: var(--gold-light);
+    font-weight: 400;
+    margin-bottom: 4px;
+  }
+  .request-title-en {
+    font-size: 1.1rem;
+    color: var(--gold);
+    font-weight: 400;
+    font-style: italic;
+    margin-bottom: 16px;
+  }
+  .request-divider {
+    width: 40px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 0 auto 20px;
+  }
+  .request-intro {
+    font-size: 0.88rem;
+    color: var(--text-dim);
+    line-height: 1.7;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+
+  @media (max-width: 768px) {
+    .request-main {
+      padding: 40px 16px;
+    }
+  }
+  @media (max-width: 480px) {
+    .request-main {
+      padding: 32px 12px;
+    }
+    .request-title-bn {
+      font-size: 1.3rem;
+    }
+  }
+</style>

@@ -66,9 +66,15 @@ jobs:
                 "https://shahriarspace.github.io/bangla-library/books/",
                 "https://shahriarspace.github.io/bangla-library/authors/",
                 "https://shahriarspace.github.io/bangla-library/about/",
+                "https://shahriarspace.github.io/bangla-library/request/",
+                "https://shahriarspace.github.io/bangla-library/stats/",
+                "https://shahriarspace.github.io/bangla-library/privacy/",
                 "https://shahriarspace.github.io/bangla-library/books/bishad-sindhu/",
                 "https://shahriarspace.github.io/bangla-library/books/gitanjali/",
-                "https://shahriarspace.github.io/bangla-library/books/moyurakkhi/"
+                "https://shahriarspace.github.io/bangla-library/books/moyurakkhi/",
+                "https://shahriarspace.github.io/bangla-library/authors/rabindranath-tagore/",
+                "https://shahriarspace.github.io/bangla-library/authors/mir-mosharraf-hossain/",
+                "https://shahriarspace.github.io/bangla-library/authors/humayun-ahmed/"
               ]
             }' || true
           echo "IndexNow pinged successfully"
