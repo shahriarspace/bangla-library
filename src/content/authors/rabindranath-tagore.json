@@ -1,0 +1,21 @@
+{
+  "name_bn": "রবীন্দ্রনাথ ঠাকুর",
+  "name_en": "Rabindranath Tagore",
+  "born": "1861-05-07",
+  "died": "1941-08-07",
+  "born_place_en": "Calcutta, Bengal Presidency, British India",
+  "born_place_bn": "কলকাতা, বেঙ্গল প্রেসিডেন্সি, ব্রিটিশ ভারত",
+  "nationality": "Indian",
+  "genres": ["Poetry", "Novel", "Short Story", "Drama", "Essay", "Music"],
+  "awards": ["Nobel Prize in Literature (1913)", "Knighthood (1915, renounced 1919)"],
+  "bio_en": "Rabindranath Tagore (1861–1941) was a Bengali polymath who reshaped Bengali literature and music, as well as Indian art. Author of Gitanjali, he became the first non-European to win the Nobel Prize in Literature in 1913. He composed the national anthems of both India ('Jana Gana Mana') and Bangladesh ('Amar Shonar Bangla'). Tagore modernised Bengali art by rejecting rigid classical forms and introducing colloquial language into literature. He founded Visva-Bharati University at Santiniketan, envisioning an open-air school that merged Eastern and Western educational philosophies.",
+  "bio_bn": "রবীন্দ্রনাথ ঠাকুর (১৮৬১–১৯৪১) ছিলেন একজন বাঙালি বহুশাস্ত্রজ্ঞ যিনি বাংলা সাহিত্য ও সংগীতকে নতুন রূপ দিয়েছিলেন। গীতাঞ্জলির রচয়িতা হিসেবে তিনি ১৯১৩ সালে সাহিত্যে নোবেল পুরস্কার লাভকারী প্রথম অ-ইউরোপীয় হন। তিনি ভারত ও বাংলাদেশ — উভয় দেশের জাতীয় সংগীতের রচয়িতা। তিনি শান্তিনিকেতনে বিশ্বভারতী বিশ্ববিদ্যালয় প্রতিষ্ঠা করেন।",
+  "facts": [
+    "He composed over 2,200 songs, known collectively as Rabindra Sangeet, which form a distinct genre of Bengali music.",
+    "He started writing poetry at the age of eight and published his first substantial work at sixteen.",
+    "He renounced his British knighthood in 1919 as a protest against the Jallianwala Bagh massacre."
+  ],
+  "wikipedia_en": "https://en.wikipedia.org/wiki/Rabindranath_Tagore",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Rabindranath_Tagore_in_1909.jpg/440px-Rabindranath_Tagore_in_1909.jpg",
+  "image_credit": "Unknown author, Public domain, via Wikimedia Commons"
+}

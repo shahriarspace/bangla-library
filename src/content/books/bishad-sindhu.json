@@ -3,9 +3,15 @@
   "title_en": "Bishad Sindhu (The Ocean of Sorrow)",
   "author_bn": "মীর মশাররফ হোসেন",
   "author_en": "Mir Mosharraf Hossain",
+  "author_slug": "mir-mosharraf-hossain",
   "year": "1885",
+  "published_date": "2026-03-10",
+  "status": "published",
   "category": "Novel",
   "description_en": "Bishad Sindhu is a historical novel by Mir Mosharraf Hossain, considered one of the greatest works in Bengali literature. It narrates the tragedy of Karbala and the martyrdom of Imam Husayn ibn Ali.",
+  "description_bn": "বিষাদ সিন্ধু মীর মশাররফ হোসেনের ঐতিহাসিক উপন্যাস, যা কারবালার ট্র্যাজেডি ও ইমাম হুসাইনের শাহাদতের কাহিনী বর্ণনা করে।",
+  "original_publisher": "Self-published",
+  "source": "Public domain",
   "paragraphs": [
     {
       "id": 1,

@@ -1,0 +1,353 @@
+---
+import Base from '../../layouts/Base.astro';
+const base = import.meta.env.BASE_URL;
+---
+
+<Base
+  title="Privacy Policy"
+  description="Privacy Policy for Bangla Library. Learn about our data practices, your rights under GDPR, and how we protect your privacy."
+  canonicalPath="/privacy/"
+>
+  <main class="privacy-main">
+    <div class="container">
+      <div class="privacy-header">
+        <h1>Privacy Policy · গোপনীয়তা নীতি</h1>
+        <p class="last-updated">Last updated: March 2026</p>
+      </div>
+
+      <div class="privacy-content">
+
+        <!-- 1. Data Controller -->
+        <section class="privacy-section">
+          <h2>1. Data Controller · তথ্য নিয়ন্ত্রক</h2>
+          <div class="bilingual">
+            <p>
+              <strong>Bangla Library</strong> is a personal, non-commercial open-source project.
+              For GDPR enquiries, contact us at the email address listed in the
+              <a href={`${base}/about`}>About page</a>.
+            </p>
+            <p lang="bn">
+              <strong>বাংলা পাঠাগার</strong> একটি ব্যক্তিগত, অ-বাণিজ্যিক ওপেন সোর্স প্রকল্প।
+              GDPR সংক্রান্ত জিজ্ঞাসার জন্য আমাদের "সম্পর্কে" পাতায় দেওয়া ইমেইলে যোগাযোগ করুন।
+            </p>
+          </div>
+        </section>
+
+        <!-- 2. What We Store Locally -->
+        <section class="privacy-section">
+          <h2>2. What We Store Locally · স্থানীয়ভাবে যা সংরক্ষণ করা হয়</h2>
+          <div class="bilingual">
+            <div>
+              <p>With your consent, we store the following in your browser's localStorage (never sent to any server):</p>
+              <table class="data-table">
+                <thead>
+                  <tr><th>Key</th><th>Purpose</th><th>Category</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td><code>bl_consent_v1</code></td><td>Your privacy preferences</td><td>Necessary</td></tr>
+                  <tr><td><code>bl-theme</code></td><td>Selected reading theme</td><td>Functional</td></tr>
+                  <tr><td><code>bl_readPrefs</code></td><td>Font size, view mode</td><td>Functional</td></tr>
+                  <tr><td><code>bl_progress_*</code></td><td>Reading position per book</td><td>Functional</td></tr>
+                </tbody>
+              </table>
+              <p>Functional data is only stored if you accept the "Functional" consent category.</p>
+            </div>
+            <div lang="bn">
+              <p>আপনার সম্মতিতে, আমরা আপনার ব্রাউজারের localStorage-এ নিম্নলিখিত তথ্য সংরক্ষণ করি (কখনো কোনো সার্ভারে পাঠানো হয় না):</p>
+              <p>কার্যকরী তথ্য শুধুমাত্র "কার্যকরী" সম্মতি বিভাগ গ্রহণ করলে সংরক্ষণ করা হয়।</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. Cloudflare Web Analytics -->
+        <section class="privacy-section">
+          <h2>3. Cloudflare Web Analytics</h2>
+          <div class="bilingual">
+            <div>
+              <p>
+                If you accept the "Analytics" consent category, we load
+                <a href="https://www.cloudflare.com/web-analytics/" target="_blank" rel="noopener">Cloudflare Web Analytics</a>,
+                a privacy-focused, cookieless analytics service. It collects:
+              </p>
+              <ul>
+                <li>Page views (no personal identifiers)</li>
+                <li>Referrer information</li>
+                <li>Country-level location (from IP, not stored)</li>
+                <li>Browser and device type</li>
+              </ul>
+              <p>
+                No cookies are set. No personal data is collected. You can opt out at any time via
+                the "Privacy Preferences" button in the footer.
+              </p>
+              <p>
+                <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">
+                  Cloudflare Privacy Policy &rarr;
+                </a>
+              </p>
+            </div>
+            <div lang="bn">
+              <p>
+                আপনি "বিশ্লেষণ" সম্মতি বিভাগ গ্রহণ করলে, আমরা Cloudflare Web Analytics লোড করি — একটি
+                গোপনীয়তা-কেন্দ্রিক, কুকিবিহীন বিশ্লেষণ সেবা। কোনো ব্যক্তিগত তথ্য সংগ্রহ করা হয় না।
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. Cloudflare Workers -->
+        <section class="privacy-section">
+          <h2>4. Cloudflare Workers</h2>
+          <div class="bilingual">
+            <p>
+              Our backend uses Cloudflare Workers for rate limiting and API endpoints. Your IP address
+              may be temporarily processed for rate limiting purposes but is not stored permanently.
+            </p>
+            <p lang="bn">
+              আমাদের ব্যাকএন্ড রেট লিমিটিং ও API এন্ডপয়েন্টের জন্য Cloudflare Workers ব্যবহার করে।
+              আপনার IP ঠিকানা সাময়িকভাবে রেট লিমিটিংয়ের জন্য প্রক্রিয়া করা হতে পারে কিন্তু স্থায়ীভাবে সংরক্ষণ করা হয় না।
+            </p>
+          </div>
+        </section>
+
+        <!-- 5. Giscus Comments -->
+        <section class="privacy-section">
+          <h2>5. Giscus Comments · গিসকাস মন্তব্য</h2>
+          <div class="bilingual">
+            <div>
+              <p>
+                If you choose to post a comment, you sign in via GitHub. Your GitHub username
+                and comment are stored in our public GitHub Discussions — visible to anyone.
+              </p>
+              <p>
+                The Giscus script loads from giscus.app. No tracking cookies are set by Giscus.
+              </p>
+              <p>Legal basis: Consent — comments are entirely optional.</p>
+              <p>
+                <a href="https://github.com/giscus/giscus" target="_blank" rel="noopener">
+                  Giscus Privacy &rarr;
+                </a>
+              </p>
+            </div>
+            <div lang="bn">
+              <p>
+                মন্তব্য করতে চাইলে আপনাকে GitHub-এ সাইন ইন করতে হবে। আপনার GitHub ব্যবহারকারী নাম ও মন্তব্য
+                আমাদের পাবলিক GitHub Discussions-এ সংরক্ষিত হয়।
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 6. Your Rights -->
+        <section class="privacy-section">
+          <h2>6. Your Rights Under GDPR · GDPR-এর অধীনে আপনার অধিকার</h2>
+          <div class="bilingual">
+            <div>
+              <p>Under the General Data Protection Regulation (GDPR), you have the right to:</p>
+              <ul>
+                <li><strong>Access</strong> — request what data we hold about you</li>
+                <li><strong>Rectification</strong> — correct inaccurate data</li>
+                <li><strong>Erasure</strong> — request deletion of your data</li>
+                <li><strong>Object</strong> — object to data processing</li>
+                <li><strong>Portability</strong> — receive your data in a machine-readable format</li>
+                <li><strong>Lodge a complaint</strong> — with a supervisory authority</li>
+              </ul>
+              <p>
+                Since all data is stored locally in your browser, you can erase all data by
+                clearing your browser's localStorage for this site.
+              </p>
+              <p>
+                You may also lodge a complaint with Germany's Federal Commissioner for Data Protection:
+                <a href="https://www.bfdi.bund.de" target="_blank" rel="noopener">BfDI (bfdi.bund.de)</a>.
+              </p>
+            </div>
+            <div lang="bn">
+              <p>
+                GDPR-এর অধীনে আপনার অ্যাক্সেস, সংশোধন, মুছে ফেলা, আপত্তি ও বহনযোগ্যতার অধিকার রয়েছে।
+                সমস্ত তথ্য আপনার ব্রাউজারে স্থানীয়ভাবে সংরক্ষিত হওয়ায়, ব্রাউজারের localStorage মুছে ফেলার মাধ্যমে
+                সমস্ত তথ্য মুছে ফেলা যায়।
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 7-9. Explicit Statements -->
+        <section class="privacy-section">
+          <h2>7. Explicit Statements</h2>
+          <div class="statements">
+            <div class="statement">
+              <span class="statement-icon">&#10003;</span>
+              <div>
+                <strong>No cookies.</strong> This site does not use cookies of any kind.
+              </div>
+            </div>
+            <div class="statement">
+              <span class="statement-icon">&#10003;</span>
+              <div>
+                <strong>No data sales.</strong> We do not sell, rent, or trade any personal information.
+              </div>
+            </div>
+            <div class="statement">
+              <span class="statement-icon">&#10003;</span>
+              <div>
+                <strong>No profiling.</strong> We do not build profiles or use personal data for automated decision-making.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 10. Contact -->
+        <section class="privacy-section">
+          <h2>8. Contact · যোগাযোগ</h2>
+          <div class="bilingual">
+            <p>
+              For any GDPR-related requests or questions, please visit our
+              <a href={`${base}/about`}>About page</a> for contact information.
+            </p>
+            <p lang="bn">
+              GDPR সংক্রান্ত যেকোনো অনুরোধ বা প্রশ্নের জন্য, আমাদের "সম্পর্কে" পাতায় যোগাযোগের তথ্য দেখুন।
+            </p>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+</Base>
+
+<style>
+  .privacy-main {
+    padding: 60px 24px;
+  }
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .privacy-header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .privacy-header h1 {
+    font-size: 1.8rem;
+    color: var(--gold-light);
+    font-weight: 400;
+    margin-bottom: 8px;
+  }
+  .last-updated {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+  }
+  .privacy-section {
+    margin-bottom: 40px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  .privacy-section:last-child {
+    border-bottom: none;
+  }
+  .privacy-section h2 {
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    color: var(--gold);
+    font-weight: 400;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+  .bilingual {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .bilingual p {
+    font-size: 0.88rem;
+    line-height: 1.8;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+  .bilingual ul {
+    font-size: 0.88rem;
+    color: var(--text);
+    padding-left: 20px;
+    line-height: 1.8;
+    margin-bottom: 12px;
+  }
+  .bilingual a {
+    color: var(--gold);
+    text-decoration: underline;
+  }
+  .bilingual [lang="bn"] {
+    font-family: var(--font-bn);
+  }
+
+  /* Data table */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+    margin: 12px 0;
+  }
+  .data-table th {
+    text-align: left;
+    padding: 8px;
+    border-bottom: 1px solid var(--border);
+    color: var(--gold-dim);
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-size: 0.68rem;
+  }
+  .data-table td {
+    padding: 8px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  .data-table code {
+    font-size: 0.75rem;
+    color: var(--gold);
+    background: var(--bg2);
+    padding: 2px 6px;
+  }
+
+  /* Explicit statements */
+  .statements {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .statement {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 16px;
+    border: 1px solid var(--border);
+    background: var(--bg-panel);
+  }
+  .statement-icon {
+    color: var(--gold);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .statement div {
+    font-size: 0.85rem;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  @media (max-width: 768px) {
+    .privacy-main {
+      padding: 40px 16px;
+    }
+    .bilingual {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+  }
+  @media (max-width: 480px) {
+    .privacy-main {
+      padding: 32px 12px;
+    }
+    .privacy-header h1 {
+      font-size: 1.4rem;
+    }
+  }
+</style>

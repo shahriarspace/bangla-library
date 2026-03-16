@@ -1,0 +1,409 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const authors = await getCollection('authors');
+  return authors.map(author => ({
+    params: { slug: author.id },
+    props: { author },
+  }));
+}
+
+const { author } = Astro.props;
+const a = author.data;
+const base = import.meta.env.BASE_URL;
+
+// Get all published books by this author
+const allBooks = await getCollection('books',
+  ({ data }) => data.status === 'published' && data.author_slug === author.id
+);
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": a.name_en,
+  "alternateName": a.name_bn,
+  "birthDate": a.born || undefined,
+  "deathDate": a.died || undefined,
+  "birthPlace": a.born_place_en || undefined,
+  "nationality": a.nationality || undefined,
+  "description": a.bio_en || undefined,
+  "sameAs": a.wikipedia_en ? [a.wikipedia_en] : undefined,
+  "image": a.image_url || undefined,
+};
+---
+
+<Base
+  title={`${a.name_en} — Author`}
+  description={a.bio_en ? a.bio_en.slice(0, 160) : `${a.name_en} (${a.name_bn}) — Bengali author. Read their works with parallel English translations on Bangla Library.`}
+  canonicalPath={`/authors/${author.id}/`}
+  ogType="profile"
+  jsonLd={jsonLd}
+>
+  <main class="author-page">
+    <div class="container">
+
+      <!-- Author Header -->
+      <section class="author-header">
+        <div class="author-header-inner">
+          {a.image_url ? (
+            <div class="author-portrait">
+              <img
+                src={a.image_url}
+                alt={`Portrait of ${a.name_en}`}
+                loading="eager"
+                width="220"
+                height="280"
+              />
+              {a.image_credit && (
+                <div class="image-credit">{a.image_credit}</div>
+              )}
+            </div>
+          ) : (
+            <div class="author-portrait author-portrait-fallback">
+              <div class="fallback-initials">{a.name_bn.charAt(0)}</div>
+            </div>
+          )}
+
+          <div class="author-info">
+            <h1 class="author-name-bn" lang="bn">{a.name_bn}</h1>
+            <h2 class="author-name-en">{a.name_en}</h2>
+
+            <div class="author-meta">
+              {a.born && (
+                <span class="meta-item">
+                  Born: {a.born}{a.born_place_en ? `, ${a.born_place_en}` : ''}
+                </span>
+              )}
+              {a.died && <span class="meta-item">Died: {a.died}</span>}
+              {a.nationality && <span class="meta-item">{a.nationality}</span>}
+            </div>
+
+            {a.genres.length > 0 && (
+              <div class="badge-row">
+                {a.genres.map(g => <span class="badge badge-genre">{g}</span>)}
+              </div>
+            )}
+            {a.awards.length > 0 && (
+              <div class="badge-row">
+                {a.awards.map(aw => <span class="badge badge-award">{aw}</span>)}
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <!-- Biography -->
+      {(a.bio_en || a.bio_bn) && (
+        <section class="author-section">
+          <h3 class="section-title">Biography · জীবনী</h3>
+          <div class="bio-columns">
+            {a.bio_en && <div class="bio-col"><p>{a.bio_en}</p></div>}
+            {a.bio_bn && <div class="bio-col" lang="bn"><p>{a.bio_bn}</p></div>}
+          </div>
+        </section>
+      )}
+
+      <!-- Did You Know -->
+      {a.facts.length > 0 && (
+        <section class="author-section">
+          <h3 class="section-title">Did You Know? · জানেন কি?</h3>
+          <ul class="facts-list">
+            {a.facts.map(fact => <li>{fact}</li>)}
+          </ul>
+        </section>
+      )}
+
+      <!-- Works in Library -->
+      <section class="author-section">
+        <h3 class="section-title">Works in Library · গ্রন্থাগারে রচনাসমূহ</h3>
+        {allBooks.length > 0 ? (
+          <div class="works-grid">
+            {allBooks.map(book => (
+              <a href={`${base}/books/${book.id}`} class="work-card">
+                <div class="work-title-bn" lang="bn">{book.data.title_bn}</div>
+                <div class="work-title-en">{book.data.title_en}</div>
+                <div class="work-meta">
+                  {book.data.category} · {book.data.year} · {book.data.paragraphs.length} passages
+                </div>
+                {book.data.description_en && (
+                  <div class="work-desc">{book.data.description_en}</div>
+                )}
+                <div class="work-read">Read &rarr;</div>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <p style="color:var(--text-dim);font-style:italic;">No published works in library yet.</p>
+        )}
+      </section>
+
+      <!-- Wikipedia Link -->
+      {a.wikipedia_en && (
+        <section class="author-section" style="text-align:center;">
+          <a href={a.wikipedia_en} target="_blank" rel="noopener noreferrer" class="wiki-link">
+            Read more on Wikipedia &rarr;
+          </a>
+        </section>
+      )}
+
+    </div>
+  </main>
+</Base>
+
+<style>
+  .author-page {
+    padding: 60px 24px;
+  }
+
+  /* Header */
+  .author-header {
+    margin-bottom: 48px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+  }
+  .author-header-inner {
+    display: flex;
+    gap: 36px;
+    align-items: flex-start;
+  }
+  .author-portrait {
+    flex-shrink: 0;
+    width: 180px;
+  }
+  .author-portrait img {
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--border);
+    filter: sepia(0.1) contrast(1.05);
+  }
+  .image-credit {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    margin-top: 6px;
+    opacity: 0.7;
+  }
+  .author-portrait-fallback {
+    height: 220px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .fallback-initials {
+    font-family: var(--font-bn);
+    font-size: 4rem;
+    color: var(--gold-dim);
+    opacity: 0.5;
+  }
+  .author-info {
+    flex: 1;
+  }
+  .author-name-bn {
+    font-family: var(--font-bn);
+    font-size: 2rem;
+    color: var(--gold-light);
+    font-weight: 400;
+    margin-bottom: 4px;
+  }
+  .author-name-en {
+    font-size: 1.2rem;
+    color: var(--gold);
+    font-weight: 400;
+    margin-bottom: 16px;
+  }
+  .author-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .meta-item {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+  }
+  .badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .badge {
+    font-size: 0.7rem;
+    padding: 4px 10px;
+    border-radius: 2px;
+    letter-spacing: 0.04em;
+  }
+  .badge-genre {
+    border: 1px solid var(--border);
+    color: var(--gold-dim);
+  }
+  .badge-award {
+    border: 1px solid rgba(200, 160, 80, 0.3);
+    color: var(--gold);
+    background: rgba(200, 160, 80, 0.05);
+  }
+
+  /* Sections */
+  .author-section {
+    margin-bottom: 48px;
+  }
+  .section-title {
+    font-size: 0.75rem;
+    letter-spacing: 0.25em;
+    color: var(--gold);
+    text-transform: uppercase;
+    font-weight: 400;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Bio */
+  .bio-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+  .bio-col p {
+    font-size: 0.92rem;
+    line-height: 1.9;
+    color: var(--text);
+  }
+  .bio-col[lang="bn"] p {
+    font-family: var(--font-bn);
+  }
+
+  /* Facts */
+  .facts-list {
+    list-style: none;
+    padding: 0;
+  }
+  .facts-list li {
+    font-size: 0.88rem;
+    line-height: 1.8;
+    color: var(--text);
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    padding-left: 24px;
+  }
+  .facts-list li::before {
+    content: '\2726';
+    position: absolute;
+    left: 0;
+    color: var(--gold-dim);
+  }
+
+  /* Works grid */
+  .works-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+    gap: 16px;
+  }
+  .work-card {
+    display: block;
+    padding: 24px;
+    border: 1px solid var(--border);
+    background: var(--bg-panel);
+    transition: all 0.25s;
+    text-decoration: none;
+  }
+  .work-card:hover {
+    border-color: var(--card-hover-border);
+    background: var(--card-hover-bg);
+  }
+  .work-title-bn {
+    font-family: var(--font-bn);
+    font-size: 1.3rem;
+    color: var(--gold-light);
+    margin-bottom: 4px;
+  }
+  .work-title-en {
+    font-size: 0.9rem;
+    color: var(--gold);
+    font-style: italic;
+    margin-bottom: 12px;
+  }
+  .work-meta {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .work-desc {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .work-read {
+    margin-top: 14px;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    color: var(--gold-dim);
+  }
+
+  /* Wiki link */
+  .wiki-link {
+    font-size: 0.85rem;
+    color: var(--gold-dim);
+    border: 1px solid var(--border);
+    padding: 12px 28px;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    transition: all 0.2s;
+  }
+  .wiki-link:hover {
+    border-color: var(--card-hover-border);
+    color: var(--gold-light);
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .author-page {
+      padding: 40px 16px;
+    }
+    .author-header-inner {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .author-portrait {
+      width: 140px;
+    }
+    .author-meta {
+      justify-content: center;
+    }
+    .badge-row {
+      justify-content: center;
+    }
+    .bio-columns {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+  }
+  @media (max-width: 480px) {
+    .author-page {
+      padding: 32px 12px;
+    }
+    .author-portrait {
+      width: 120px;
+    }
+    .work-card {
+      padding: 18px;
+    }
+  }
+</style>

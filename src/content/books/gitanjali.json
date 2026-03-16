@@ -3,9 +3,15 @@
   "title_en": "Gitanjali",
   "author_bn": "রবীন্দ্রনাথ ঠাকুর",
   "author_en": "Rabindranath Tagore",
+  "author_slug": "rabindranath-tagore",
   "year": "1910",
+  "published_date": "2026-03-10",
+  "status": "published",
   "category": "Poetry",
   "description_en": "Gitanjali (Song Offerings) is a collection of 103 English prose poems, a translation by the Bengali poet Rabindranath Tagore of his own Bengali poetry. It was published in 1912 by the India Society of London.",
+  "description_bn": "গীতাঞ্জলি ১০৩টি ইংরেজি গদ্যকবিতার একটি সংকলন, যা বাঙালি কবি রবীন্দ্রনাথ ঠাকুরের নিজের বাংলা কবিতার অনুবাদ।",
+  "original_publisher": "India Society of London",
+  "source": "Public domain",
   "paragraphs": [
     {
       "id": 1,

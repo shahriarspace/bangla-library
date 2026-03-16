@@ -5,6 +5,12 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 // ---------------------------------------------------------------------------
 const STORAGE_KEY = 'bl-reader';
 const PARAS_PER_PAGE = 12;
+const CONSENT_KEY = 'bl_consent_v1';
+const PROGRESS_PREFIX = 'bl_progress_';
+const TOAST_DISMISS_MS = 8000;
+const PROGRESS_DEBOUNCE_MS = 10000;
+const MIN_PARAGRAPH_FOR_TOAST = 5;
+const VIRTUAL_THRESHOLD = 300;
 
 const FONT_SIZES = {
   sm: { en: '0.92rem', bn: '1.05rem' },
@@ -18,6 +24,13 @@ const MODES = [
   { id: 'side',       label: 'Side by Side', icon: '\u{2194}',  desc: 'Two columns' },
   { id: 'bn',         label: 'Bangla',  icon: '\u{0995}',  desc: 'Bengali text only' },
   { id: 'en',         label: 'English', icon: 'A',          desc: 'English translation only' },
+];
+
+// Mobile-specific toggle options (shown below 640px)
+const MOBILE_TOGGLES = [
+  { id: 'bn', label: 'বাংলা' },
+  { id: 'en', label: 'English' },
+  { id: 'both', label: 'Both \u2194' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -34,7 +47,44 @@ function savePrefs(patch) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...prev, ...patch }));
 }
 
-// Hook: detect mobile viewport
+/** Check if user has granted "functional" consent */
+function hasFunctionalConsent() {
+  try {
+    const raw = localStorage.getItem(CONSENT_KEY);
+    if (!raw) return false;
+    const consent = JSON.parse(raw);
+    return consent?.decided && consent?.categories?.functional === true;
+  } catch { return false; }
+}
+
+/** Get saved reading progress for a book slug */
+function getSavedProgress(slug) {
+  if (!hasFunctionalConsent()) return null;
+  try {
+    const raw = localStorage.getItem(PROGRESS_PREFIX + slug);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+/** Save reading progress for a book slug */
+function saveProgress(slug, paragraphId) {
+  if (!hasFunctionalConsent()) return;
+  try {
+    localStorage.setItem(PROGRESS_PREFIX + slug, JSON.stringify({
+      paragraph: paragraphId,
+      timestamp: Date.now(),
+    }));
+  } catch { /* ignore quota errors */ }
+}
+
+/** Detect preferred language from navigator */
+function detectBanglaLocale() {
+  if (typeof navigator === 'undefined') return false;
+  const lang = (navigator.language || '').toLowerCase();
+  return lang.startsWith('bn');
+}
+
+// Hook: detect viewport width
 function useIsMobile(breakpoint = 768) {
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -48,6 +98,29 @@ function useIsMobile(breakpoint = 768) {
     return () => mql.removeEventListener('change', handler);
   }, [breakpoint]);
   return isMobile;
+}
+
+// ---------------------------------------------------------------------------
+// Scroll-to-hash helper
+// ---------------------------------------------------------------------------
+function scrollToHash() {
+  if (typeof window === 'undefined') return;
+  const hash = window.location.hash;
+  if (!hash || !hash.startsWith('#p')) return;
+  // Small delay to let DOM render
+  setTimeout(() => {
+    const el = document.getElementById(hash.slice(1));
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Briefly highlight
+      el.style.outline = '2px solid var(--gold)';
+      el.style.outlineOffset = '4px';
+      setTimeout(() => {
+        el.style.outline = 'none';
+        el.style.outlineOffset = '';
+      }, 2000);
+    }
+  }, 300);
 }
 
 // ---------------------------------------------------------------------------
@@ -74,9 +147,366 @@ function ProgressBar({ progress }) {
 }
 
 // ---------------------------------------------------------------------------
+// Translation Quality Badge
+// ---------------------------------------------------------------------------
+function TranslationBadge({ reviewed }) {
+  const color = reviewed ? '#4ade80' : '#fbbf24';
+  const icon = reviewed ? '\uD83D\uDFE2' : '\uD83D\uDFE1';
+  const text = reviewed
+    ? 'Translation reviewed'
+    : 'AI-assisted translation \u2014 not yet reviewed';
+
+  return (
+    <div style={{
+      display: 'inline-flex', alignItems: 'center', gap: '6px',
+      padding: '4px 12px',
+      borderRadius: '12px',
+      border: `1px solid ${color}33`,
+      background: `${color}0D`,
+      fontSize: '0.72rem',
+      color: color,
+      letterSpacing: '0.02em',
+      marginBottom: '16px',
+    }}>
+      <span>{icon}</span>
+      <span>{text}</span>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Collapsible Book Introduction
+// ---------------------------------------------------------------------------
+function BookIntro({ book, base }) {
+  const [open, setOpen] = useState(false);
+  const hasContent = book.description_en || book.description_bn || book.edition_note || book.source || book.back_image;
+  if (!hasContent) return null;
+
+  return (
+    <div style={{
+      marginBottom: '20px',
+      border: '1px solid var(--border)',
+      borderRadius: '4px',
+      overflow: 'hidden',
+    }}>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          width: '100%',
+          padding: '12px 16px',
+          background: 'var(--controls-bg)',
+          border: 'none',
+          cursor: 'pointer',
+          color: 'var(--text-dim)',
+          fontFamily: 'var(--font-en)',
+          fontSize: '0.82rem',
+          letterSpacing: '0.04em',
+        }}
+      >
+        <span>About this book {open ? '\u25B4' : '\u25BE'}</span>
+      </button>
+      {open && (
+        <div style={{
+          padding: '20px 16px',
+          background: 'var(--bg)',
+          borderTop: '1px solid var(--border)',
+        }}>
+          {/* Descriptions side by side on desktop, stacked on mobile */}
+          {(book.description_en || book.description_bn) && (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: book.description_en && book.description_bn
+                ? 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))'
+                : '1fr',
+              gap: '20px',
+              marginBottom: '16px',
+            }}>
+              {book.description_bn && (
+                <div>
+                  <div style={{ fontSize: '0.65rem', letterSpacing: '0.15em', color: 'var(--gold)', textTransform: 'uppercase', marginBottom: '8px', opacity: 0.6 }}>
+                    Bengali
+                  </div>
+                  <p style={{
+                    fontFamily: 'var(--font-bn)', fontSize: '1rem',
+                    lineHeight: '2', color: 'var(--text-bn)', margin: 0,
+                  }} lang="bn">
+                    {book.description_bn}
+                  </p>
+                </div>
+              )}
+              {book.description_en && (
+                <div>
+                  <div style={{ fontSize: '0.65rem', letterSpacing: '0.15em', color: 'var(--gold)', textTransform: 'uppercase', marginBottom: '8px', opacity: 0.6 }}>
+                    English
+                  </div>
+                  <p style={{
+                    fontFamily: 'var(--font-en)', fontSize: '0.92rem',
+                    lineHeight: '1.8', color: 'var(--text-en)', fontStyle: 'italic', margin: 0,
+                  }}>
+                    {book.description_en}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Edition note */}
+          {book.edition_note && (
+            <p style={{
+              fontSize: '0.8rem', color: 'var(--text-dim)', lineHeight: '1.7',
+              marginBottom: '12px', fontStyle: 'italic',
+            }}>
+              {book.edition_note}
+            </p>
+          )}
+
+          {/* Source */}
+          {book.source && (
+            <p style={{
+              fontSize: '0.75rem', color: 'var(--text-dim)', lineHeight: '1.6',
+              marginBottom: '12px',
+            }}>
+              Source: {book.source}
+            </p>
+          )}
+
+          {/* Back cover image */}
+          {book.back_image && (
+            <div style={{ marginTop: '12px', textAlign: 'center' }}>
+              <img
+                src={book.back_image.startsWith('http') ? book.back_image : `${base}${book.back_image}`}
+                alt={`Back cover of ${book.title_en}`}
+                style={{
+                  maxWidth: '300px', width: '100%',
+                  borderRadius: '4px',
+                  border: '1px solid var(--border)',
+                }}
+                loading="lazy"
+              />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Continue Reading Toast
+// ---------------------------------------------------------------------------
+function ContinueReadingToast({ paragraphId, onContinue, onDismiss }) {
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setVisible(false);
+      onDismiss();
+    }, TOAST_DISMISS_MS);
+    return () => clearTimeout(timer);
+  }, [onDismiss]);
+
+  if (!visible) return null;
+
+  return (
+    <div style={{
+      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+      background: 'var(--controls-bg)',
+      borderBottom: '1px solid var(--border)',
+      padding: '10px 16px',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      gap: '12px', flexWrap: 'wrap',
+      fontSize: '0.82rem',
+      color: 'var(--text)',
+      animation: 'slideDown 0.3s ease',
+      boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
+    }}>
+      <span>You left off at paragraph {paragraphId}</span>
+      <button
+        onClick={() => { setVisible(false); onContinue(); }}
+        style={{
+          padding: '6px 14px', borderRadius: '3px',
+          border: '1px solid var(--gold)', background: 'var(--btn-active-bg)',
+          color: 'var(--gold)', cursor: 'pointer',
+          fontSize: '0.78rem', fontFamily: 'var(--font-en)',
+          minHeight: '36px',
+        }}
+      >
+        Continue
+      </button>
+      <button
+        onClick={() => { setVisible(false); onDismiss(); }}
+        style={{
+          padding: '6px 14px', borderRadius: '3px',
+          border: '1px solid var(--btn-inactive-border)', background: 'transparent',
+          color: 'var(--text-dim)', cursor: 'pointer',
+          fontSize: '0.78rem', fontFamily: 'var(--font-en)',
+          minHeight: '36px',
+        }}
+      >
+        Start from beginning
+      </button>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Paragraph Feedback Icon
+// ---------------------------------------------------------------------------
+function FeedbackIcon({ paragraphId, isMobile, isHovered }) {
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleClick = (e) => {
+    e.stopPropagation();
+    if (submitted) return;
+    // Future: open FeedbackPopover
+    setSubmitted(true);
+  };
+
+  // Desktop: only visible on hover. Mobile: always visible
+  const opacity = submitted ? 0.6 : (isMobile ? 0.5 : (isHovered ? 0.4 : 0));
+
+  return (
+    <button
+      onClick={handleClick}
+      title={submitted ? 'Feedback submitted' : 'Report translation issue'}
+      aria-label={submitted ? 'Feedback submitted' : `Report issue with paragraph ${paragraphId}`}
+      style={{
+        position: isMobile ? 'relative' : 'absolute',
+        right: isMobile ? 'auto' : '-4px',
+        top: isMobile ? 'auto' : '8px',
+        background: 'none',
+        border: 'none',
+        cursor: submitted ? 'default' : 'pointer',
+        fontSize: isMobile ? '0.65rem' : '0.8rem',
+        color: submitted ? '#4ade80' : 'var(--text-dim)',
+        opacity: opacity,
+        transition: 'opacity 0.2s ease',
+        padding: isMobile ? '4px 8px' : '4px',
+        display: 'flex', alignItems: 'center', gap: '3px',
+        minHeight: isMobile ? '32px' : 'auto',
+        pointerEvents: opacity === 0 ? 'none' : 'auto',
+      }}
+    >
+      {submitted ? '\u2713' : '\u2691'}
+      {isMobile && <span style={{ fontSize: '0.6rem' }}>{submitted ? 'Sent' : 'Report'}</span>}
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Paragraph Wrapper (adds anchor id, feedback icon, hover state)
+// ---------------------------------------------------------------------------
+function ParagraphWrapper({ paragraphId, isMobile, children }) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      id={`p${paragraphId}`}
+      data-paragraph-id={paragraphId}
+      style={{ position: 'relative' }}
+      onMouseEnter={() => !isMobile && setHovered(true)}
+      onMouseLeave={() => !isMobile && setHovered(false)}
+    >
+      {children}
+      <FeedbackIcon paragraphId={paragraphId} isMobile={isMobile} isHovered={hovered} />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Controls Toolbar
 // ---------------------------------------------------------------------------
-function Toolbar({ mode, setMode, fontSize, setFontSize, page, totalPages, setPage, showPageNav, isMobile }) {
+function Toolbar({ mode, setMode, fontSize, setFontSize, page, totalPages, setPage, showPageNav, isMobile, isMobileReader }) {
+  // On very small screens (<=640px), show simplified toggle bar
+  if (isMobileReader) {
+    // Map 'book' to 'both' for the mobile toggle
+    const mobileMode = (mode === 'book' || mode === 'side' || mode === 'paginated') ? 'both' : mode;
+
+    return (
+      <div style={{
+        padding: '12px 0',
+        borderBottom: '1px solid var(--border)',
+        marginBottom: '24px',
+      }}>
+        {/* Mobile toggle bar */}
+        <div style={{
+          display: 'flex', gap: '2px',
+          background: 'var(--controls-bg)', padding: '3px',
+          border: '1px solid var(--btn-inactive-border)', borderRadius: '4px',
+          width: '100%',
+          overflow: 'hidden',
+          marginBottom: '10px',
+        }}>
+          {MOBILE_TOGGLES.map(t => (
+            <button
+              key={t.id}
+              onClick={() => {
+                if (t.id === 'both') setMode('book');
+                else setMode(t.id);
+              }}
+              style={{
+                flex: '1 1 auto',
+                padding: '10px 6px',
+                border: 'none', borderRadius: '3px', cursor: 'pointer',
+                fontSize: t.id === 'bn' ? '0.85rem' : '0.78rem',
+                fontFamily: t.id === 'bn' ? 'var(--font-bn)' : 'var(--font-en)',
+                background: mobileMode === t.id ? 'var(--btn-active-bg)' : 'transparent',
+                color: mobileMode === t.id ? 'var(--text-active)' : 'var(--btn-inactive-color)',
+                transition: 'all 0.2s',
+                minHeight: '44px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          {/* Page navigation (paginated modes) */}
+          {showPageNav && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1}
+                style={navBtnStyle(page <= 1, true)}
+                title="Previous page"
+              >&lsaquo;</button>
+              <span style={{
+                fontSize: '0.75rem', color: 'var(--text-dim)',
+                letterSpacing: '0.06em', minWidth: '60px', textAlign: 'center',
+              }}>
+                {page} / {totalPages}
+              </span>
+              <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages}
+                style={navBtnStyle(page >= totalPages, true)}
+                title="Next page"
+              >&rsaquo;</button>
+            </div>
+          )}
+
+          {/* Font size */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {['sm', 'md', 'lg'].map(s => (
+              <button key={s} onClick={() => setFontSize(s)} style={{
+                width: '40px', height: '40px',
+                minHeight: '44px', minWidth: '44px',
+                border: `1px solid ${fontSize === s ? 'var(--btn-active-border)' : 'var(--btn-inactive-border)'}`,
+                borderRadius: '3px', cursor: 'pointer',
+                background: fontSize === s ? 'var(--btn-active-bg)' : 'transparent',
+                color: fontSize === s ? 'var(--text-active)' : 'var(--btn-inactive-color)',
+                fontSize: s === 'sm' ? '0.65rem' : s === 'md' ? '0.82rem' : '1rem',
+                fontFamily: 'Georgia, serif',
+                transition: 'all 0.2s',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>A</button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop / tablet toolbar (original)
   return (
     <div style={{
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -185,55 +615,111 @@ function navBtnStyle(disabled, isMobile) {
 // ---------------------------------------------------------------------------
 // Mode 1: Book (Interleaved)
 // ---------------------------------------------------------------------------
-function BookMode({ paragraphs, activeId, setActiveId, fontSize, containerRef }) {
+function BookMode({ paragraphs, activeId, setActiveId, fontSize, containerRef, isMobile }) {
   return (
     <div ref={containerRef} style={{
       maxWidth: '720px', margin: '0 auto',
       padding: '0 16px',
     }}>
       {paragraphs.map(p => (
-        <div
-          key={p.id}
-          onClick={() => setActiveId(activeId === p.id ? null : p.id)}
-          style={{
-            marginBottom: '32px',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-          }}
-        >
-          {/* Bengali paragraph */}
-          <p style={{
-            fontSize: FONT_SIZES[fontSize].bn,
-            fontFamily: 'var(--font-bn)',
-            lineHeight: '2.1',
-            color: activeId === p.id ? 'var(--text-active)' : 'var(--text-bn)',
-            marginBottom: '8px',
-            transition: 'color 0.2s',
-          }}>
-            {p.bn}
-          </p>
-          {/* English translation */}
-          <p style={{
-            fontSize: FONT_SIZES[fontSize].en,
-            fontFamily: 'var(--font-en)',
-            fontStyle: 'italic',
-            lineHeight: '1.9',
-            color: activeId === p.id ? 'var(--text-active)' : 'var(--text-en)',
-            opacity: activeId === p.id ? 1 : 0.75,
-            paddingLeft: '16px',
-            borderLeft: activeId === p.id ? '2px solid var(--border-active)' : '2px solid transparent',
-            transition: 'all 0.2s',
-          }}>
-            {p.en}
-          </p>
-          {/* Subtle divider */}
-          <div style={{
-            width: '40px', height: '1px',
-            background: 'var(--border)',
-            margin: '24px auto 0',
-            opacity: 0.5,
-          }} />
-        </div>
+        <ParagraphWrapper key={p.id} paragraphId={p.id} isMobile={isMobile}>
+          <div
+            onClick={() => setActiveId(activeId === p.id ? null : p.id)}
+            style={{
+              marginBottom: '32px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+          >
+            {/* Bengali paragraph */}
+            <p style={{
+              fontSize: FONT_SIZES[fontSize].bn,
+              fontFamily: 'var(--font-bn)',
+              lineHeight: '2.1',
+              color: activeId === p.id ? 'var(--text-active)' : 'var(--text-bn)',
+              marginBottom: '8px',
+              transition: 'color 0.2s',
+            }}>
+              {p.bn}
+            </p>
+            {/* English translation */}
+            <p style={{
+              fontSize: FONT_SIZES[fontSize].en,
+              fontFamily: 'var(--font-en)',
+              fontStyle: 'italic',
+              lineHeight: '1.9',
+              color: activeId === p.id ? 'var(--text-active)' : 'var(--text-en)',
+              opacity: activeId === p.id ? 1 : 0.75,
+              paddingLeft: '16px',
+              borderLeft: activeId === p.id ? '2px solid var(--border-active)' : '2px solid transparent',
+              transition: 'all 0.2s',
+            }}>
+              {p.en}
+            </p>
+            {/* Subtle divider */}
+            <div style={{
+              width: '40px', height: '1px',
+              background: 'var(--border)',
+              margin: '24px auto 0',
+              opacity: 0.5,
+            }} />
+          </div>
+        </ParagraphWrapper>
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Mode 1b: Book (stacked Both on mobile — bn then en per paragraph)
+// ---------------------------------------------------------------------------
+function MobileBothMode({ paragraphs, activeId, setActiveId, fontSize, containerRef, isMobile }) {
+  return (
+    <div ref={containerRef} style={{
+      maxWidth: '720px', margin: '0 auto',
+      padding: '0 12px',
+    }}>
+      {paragraphs.map(p => (
+        <ParagraphWrapper key={p.id} paragraphId={p.id} isMobile={isMobile}>
+          <div
+            onClick={() => setActiveId(activeId === p.id ? null : p.id)}
+            style={{
+              marginBottom: '28px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+          >
+            {/* Bengali paragraph */}
+            <p style={{
+              fontSize: FONT_SIZES[fontSize].bn,
+              fontFamily: 'var(--font-bn)',
+              lineHeight: '2',
+              color: activeId === p.id ? 'var(--text-active)' : 'var(--text-bn)',
+              marginBottom: '6px',
+            }}>
+              {p.bn}
+            </p>
+            {/* English translation */}
+            <p style={{
+              fontSize: FONT_SIZES[fontSize].en,
+              fontFamily: 'var(--font-en)',
+              fontStyle: 'italic',
+              lineHeight: '1.8',
+              color: activeId === p.id ? 'var(--text-active)' : 'var(--text-en)',
+              opacity: activeId === p.id ? 1 : 0.7,
+              paddingLeft: '12px',
+              borderLeft: activeId === p.id ? '2px solid var(--border-active)' : '2px solid transparent',
+            }}>
+              {p.en}
+            </p>
+            <div style={{
+              width: '30px', height: '1px',
+              background: 'var(--border)',
+              margin: '20px auto 0',
+              opacity: 0.4,
+            }} />
+          </div>
+        </ParagraphWrapper>
       ))}
     </div>
   );
@@ -270,36 +756,37 @@ function PaginatedMode({ paragraphs, page, totalPages, setPage, activeId, setAct
         padding: '8px 16px 40px',
       }}>
         {pageParagraphs.map(p => (
-          <div
-            key={p.id}
-            onClick={() => setActiveId(activeId === p.id ? null : p.id)}
-            style={{
-              marginBottom: '28px',
-              cursor: 'pointer',
-            }}
-          >
-            <p style={{
-              fontSize: FONT_SIZES[fontSize].bn,
-              fontFamily: 'var(--font-bn)',
-              lineHeight: '2.1',
-              color: activeId === p.id ? 'var(--text-active)' : 'var(--text-bn)',
-              marginBottom: '8px',
-            }}>
-              {p.bn}
-            </p>
-            <p style={{
-              fontSize: FONT_SIZES[fontSize].en,
-              fontFamily: 'var(--font-en)',
-              fontStyle: 'italic',
-              lineHeight: '1.9',
-              color: activeId === p.id ? 'var(--text-active)' : 'var(--text-en)',
-              opacity: activeId === p.id ? 1 : 0.75,
-              paddingLeft: '16px',
-              borderLeft: activeId === p.id ? '2px solid var(--border-active)' : '2px solid transparent',
-            }}>
-              {p.en}
-            </p>
-          </div>
+          <ParagraphWrapper key={p.id} paragraphId={p.id} isMobile={isMobile}>
+            <div
+              onClick={() => setActiveId(activeId === p.id ? null : p.id)}
+              style={{
+                marginBottom: '28px',
+                cursor: 'pointer',
+              }}
+            >
+              <p style={{
+                fontSize: FONT_SIZES[fontSize].bn,
+                fontFamily: 'var(--font-bn)',
+                lineHeight: '2.1',
+                color: activeId === p.id ? 'var(--text-active)' : 'var(--text-bn)',
+                marginBottom: '8px',
+              }}>
+                {p.bn}
+              </p>
+              <p style={{
+                fontSize: FONT_SIZES[fontSize].en,
+                fontFamily: 'var(--font-en)',
+                fontStyle: 'italic',
+                lineHeight: '1.9',
+                color: activeId === p.id ? 'var(--text-active)' : 'var(--text-en)',
+                opacity: activeId === p.id ? 1 : 0.75,
+                paddingLeft: '16px',
+                borderLeft: activeId === p.id ? '2px solid var(--border-active)' : '2px solid transparent',
+              }}>
+                {p.en}
+              </p>
+            </div>
+          </ParagraphWrapper>
         ))}
       </div>
 
@@ -422,6 +909,8 @@ function SideMode({ paragraphs, activeId, setActiveId, fontSize, containerRef, i
         {paragraphs.map(p => (
           <div
             key={p.id}
+            id={`p${p.id}`}
+            data-paragraph-id={p.id}
             onClick={() => handleClick(p.id)}
             style={{
               padding: isMobile ? '8px 4px' : '16px 14px',
@@ -460,6 +949,7 @@ function SideMode({ paragraphs, activeId, setActiveId, fontSize, containerRef, i
         {paragraphs.map(p => (
           <div
             key={p.id}
+            data-paragraph-id={p.id}
             onClick={() => handleClick(p.id)}
             style={{
               padding: isMobile ? '8px 4px' : '16px 14px',
@@ -526,30 +1016,31 @@ function SingleLanguageMode({ paragraphs, lang, page, totalPages, setPage, activ
         padding: '8px 16px 40px',
       }}>
         {pageParagraphs.map(p => (
-          <div
-            key={p.id}
-            onClick={() => setActiveId(activeId === p.id ? null : p.id)}
-            style={{
-              marginBottom: '28px',
-              cursor: 'pointer',
-              padding: '12px 14px',
-              borderLeft: activeId === p.id ? '2px solid var(--border-active)' : '2px solid transparent',
-              background: activeId === p.id ? 'var(--highlight)' : 'transparent',
-              borderRadius: '2px',
-              transition: 'all 0.15s',
-            }}
-          >
-            <p style={{
-              fontSize: isBn ? FONT_SIZES[fontSize].bn : FONT_SIZES[fontSize].en,
-              fontFamily: isBn ? 'var(--font-bn)' : 'var(--font-en)',
-              fontStyle: isBn ? 'normal' : 'italic',
-              lineHeight: isBn ? '2.1' : '1.9',
-              color: activeId === p.id ? 'var(--text-active)' : (isBn ? 'var(--text-bn)' : 'var(--text-en)'),
-              margin: 0,
-            }}>
-              {isBn ? p.bn : p.en}
-            </p>
-          </div>
+          <ParagraphWrapper key={p.id} paragraphId={p.id} isMobile={isMobile}>
+            <div
+              onClick={() => setActiveId(activeId === p.id ? null : p.id)}
+              style={{
+                marginBottom: '28px',
+                cursor: 'pointer',
+                padding: '12px 14px',
+                borderLeft: activeId === p.id ? '2px solid var(--border-active)' : '2px solid transparent',
+                background: activeId === p.id ? 'var(--highlight)' : 'transparent',
+                borderRadius: '2px',
+                transition: 'all 0.15s',
+              }}
+            >
+              <p style={{
+                fontSize: isBn ? FONT_SIZES[fontSize].bn : FONT_SIZES[fontSize].en,
+                fontFamily: isBn ? 'var(--font-bn)' : 'var(--font-en)',
+                fontStyle: isBn ? 'normal' : 'italic',
+                lineHeight: isBn ? '2.1' : '1.9',
+                color: activeId === p.id ? 'var(--text-active)' : (isBn ? 'var(--text-bn)' : 'var(--text-en)'),
+                margin: 0,
+              }}>
+                {isBn ? p.bn : p.en}
+              </p>
+            </div>
+          </ParagraphWrapper>
         ))}
       </div>
 
@@ -598,15 +1089,38 @@ function SingleLanguageMode({ paragraphs, lang, page, totalPages, setPage, activ
 // ---------------------------------------------------------------------------
 export default function BilingualReader({ book, base = '' }) {
   const prefs = useMemo(() => loadPrefs(), []);
-  const [mode, setModeRaw] = useState(prefs.mode || 'book');
+
+  // Mobile reader breakpoint at 640px (spec requirement)
+  const isMobile = useIsMobile(768);
+  const isMobileReader = useIsMobile(640);
+
+  // Determine initial mode: on mobile <=640px, use navigator.language
+  const initialMode = useMemo(() => {
+    if (prefs.mode) return prefs.mode;
+    if (typeof window !== 'undefined' && window.innerWidth <= 640) {
+      return detectBanglaLocale() ? 'bn' : 'en';
+    }
+    return 'book';
+  }, []);
+
+  const [mode, setModeRaw] = useState(initialMode);
   const [fontSize, setFontSizeRaw] = useState(prefs.fontSize || 'md');
   const [page, setPageRaw] = useState(prefs.page || 1);
   const [activeId, setActiveId] = useState(null);
   const [progress, setProgress] = useState(0);
+  const [toastData, setToastData] = useState(null);
   const containerRef = useRef(null);
-  const isMobile = useIsMobile(768);
+  const progressTimerRef = useRef(null);
+  const currentParaRef = useRef(null);
 
   const totalPages = Math.ceil(book.paragraphs.length / PARAS_PER_PAGE);
+
+  // Derive the book slug from the URL
+  const bookSlug = useMemo(() => {
+    if (typeof window === 'undefined') return '';
+    const parts = window.location.pathname.split('/').filter(Boolean);
+    return parts[parts.length - 1] || '';
+  }, []);
 
   // Wrapped setters that persist
   const setMode = (m) => { setModeRaw(m); savePrefs({ mode: m }); };
@@ -622,6 +1136,77 @@ export default function BilingualReader({ book, base = '' }) {
       return next;
     });
   };
+
+  // --- Continue Reading Toast ---
+  useEffect(() => {
+    if (!bookSlug) return;
+    const saved = getSavedProgress(bookSlug);
+    if (saved && saved.paragraph > MIN_PARAGRAPH_FOR_TOAST) {
+      setToastData({ paragraph: saved.paragraph });
+    }
+  }, [bookSlug]);
+
+  const handleContinueReading = useCallback(() => {
+    if (!toastData) return;
+    const el = document.getElementById(`p${toastData.paragraph}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.style.outline = '2px solid var(--gold)';
+      el.style.outlineOffset = '4px';
+      setTimeout(() => {
+        el.style.outline = 'none';
+        el.style.outlineOffset = '';
+      }, 2000);
+    }
+    setToastData(null);
+  }, [toastData]);
+
+  const handleDismissToast = useCallback(() => {
+    setToastData(null);
+  }, []);
+
+  // --- IntersectionObserver for progress tracking ---
+  useEffect(() => {
+    if (typeof IntersectionObserver === 'undefined') return;
+    if (!bookSlug) return;
+
+    const paragraphEls = document.querySelectorAll('[data-paragraph-id]');
+    if (paragraphEls.length === 0) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          const pid = parseInt(entry.target.getAttribute('data-paragraph-id'), 10);
+          if (!isNaN(pid)) {
+            currentParaRef.current = pid;
+          }
+        }
+      }
+    }, { threshold: 0.5 });
+
+    paragraphEls.forEach(el => observer.observe(el));
+
+    // Debounced save every 10 seconds
+    const interval = setInterval(() => {
+      if (currentParaRef.current) {
+        saveProgress(bookSlug, currentParaRef.current);
+      }
+    }, PROGRESS_DEBOUNCE_MS);
+
+    return () => {
+      observer.disconnect();
+      clearInterval(interval);
+      // Save on unmount
+      if (currentParaRef.current) {
+        saveProgress(bookSlug, currentParaRef.current);
+      }
+    };
+  }, [bookSlug, mode, page]); // re-observe when mode/page changes
+
+  // --- Scroll to hash on mount ---
+  useEffect(() => {
+    scrollToHash();
+  }, []);
 
   // Reading progress tracking
   useEffect(() => {
@@ -640,9 +1225,29 @@ export default function BilingualReader({ book, base = '' }) {
     return () => window.removeEventListener('scroll', onScroll);
   }, [mode, page, totalPages]);
 
+  // Determine if "Both" mode on mobile should show stacked vertically
+  const showMobileBoth = isMobileReader && (mode === 'book' || mode === 'side' || mode === 'paginated');
+
   return (
     <div style={{ fontFamily: 'var(--font-en)', overflowX: 'hidden', maxWidth: '100%' }}>
+      {/* Continue Reading Toast */}
+      {toastData && (
+        <ContinueReadingToast
+          paragraphId={toastData.paragraph}
+          onContinue={handleContinueReading}
+          onDismiss={handleDismissToast}
+        />
+      )}
+
       <ProgressBar progress={progress} />
+
+      {/* Translation Quality Badge */}
+      <div style={{ textAlign: 'center', marginBottom: '4px' }}>
+        <TranslationBadge reviewed={book.translation_reviewed || false} />
+      </div>
+
+      {/* Collapsible Book Introduction */}
+      <BookIntro book={book} base={base} />
 
       <Toolbar
         mode={mode} setMode={setMode}
@@ -650,49 +1255,63 @@ export default function BilingualReader({ book, base = '' }) {
         page={page} totalPages={totalPages} setPage={setPage}
         showPageNav={mode === 'paginated' || mode === 'bn' || mode === 'en'}
         isMobile={isMobile}
+        isMobileReader={isMobileReader}
       />
 
       {/* Reading modes */}
-      {mode === 'book' && (
-        <BookMode
-          paragraphs={book.paragraphs}
-          activeId={activeId} setActiveId={setActiveId}
-          fontSize={fontSize}
-          containerRef={containerRef}
-        />
-      )}
-
-      {mode === 'paginated' && (
-        <PaginatedMode
-          paragraphs={book.paragraphs}
-          page={page} totalPages={totalPages} setPage={setPage}
-          activeId={activeId} setActiveId={setActiveId}
-          fontSize={fontSize}
-          containerRef={containerRef}
-          isMobile={isMobile}
-        />
-      )}
-
-      {mode === 'side' && (
-        <SideMode
+      {showMobileBoth ? (
+        <MobileBothMode
           paragraphs={book.paragraphs}
           activeId={activeId} setActiveId={setActiveId}
           fontSize={fontSize}
           containerRef={containerRef}
           isMobile={isMobile}
         />
-      )}
+      ) : (
+        <>
+          {mode === 'book' && (
+            <BookMode
+              paragraphs={book.paragraphs}
+              activeId={activeId} setActiveId={setActiveId}
+              fontSize={fontSize}
+              containerRef={containerRef}
+              isMobile={isMobile}
+            />
+          )}
 
-      {(mode === 'bn' || mode === 'en') && (
-        <SingleLanguageMode
-          paragraphs={book.paragraphs}
-          lang={mode}
-          page={page} totalPages={totalPages} setPage={setPage}
-          activeId={activeId} setActiveId={setActiveId}
-          fontSize={fontSize}
-          containerRef={containerRef}
-          isMobile={isMobile}
-        />
+          {mode === 'paginated' && (
+            <PaginatedMode
+              paragraphs={book.paragraphs}
+              page={page} totalPages={totalPages} setPage={setPage}
+              activeId={activeId} setActiveId={setActiveId}
+              fontSize={fontSize}
+              containerRef={containerRef}
+              isMobile={isMobile}
+            />
+          )}
+
+          {mode === 'side' && (
+            <SideMode
+              paragraphs={book.paragraphs}
+              activeId={activeId} setActiveId={setActiveId}
+              fontSize={fontSize}
+              containerRef={containerRef}
+              isMobile={isMobile}
+            />
+          )}
+
+          {(mode === 'bn' || mode === 'en') && (
+            <SingleLanguageMode
+              paragraphs={book.paragraphs}
+              lang={mode}
+              page={page} totalPages={totalPages} setPage={setPage}
+              activeId={activeId} setActiveId={setActiveId}
+              fontSize={fontSize}
+              containerRef={containerRef}
+              isMobile={isMobile}
+            />
+          )}
+        </>
       )}
 
       {/* Hints */}
@@ -702,12 +1321,21 @@ export default function BilingualReader({ book, base = '' }) {
         letterSpacing: '0.06em', opacity: 0.5,
         lineHeight: '1.8',
       }}>
-        {mode === 'book' && 'Click any passage to highlight \u00B7 Scroll to read'}
-        {mode === 'paginated' && 'Use arrow keys or buttons to turn pages \u00B7 Click to highlight'}
-        {mode === 'side' && 'Scroll syncs both columns \u00B7 Click to highlight'}
-        {mode === 'bn' && 'Bengali text only \u00B7 Use arrow keys or buttons to turn pages'}
-        {mode === 'en' && 'English translation only \u00B7 Use arrow keys or buttons to turn pages'}
+        {showMobileBoth && 'Scroll to read both languages \u00B7 Tap any passage to highlight'}
+        {!showMobileBoth && mode === 'book' && 'Click any passage to highlight \u00B7 Scroll to read'}
+        {!showMobileBoth && mode === 'paginated' && 'Use arrow keys or buttons to turn pages \u00B7 Click to highlight'}
+        {!showMobileBoth && mode === 'side' && 'Scroll syncs both columns \u00B7 Click to highlight'}
+        {!showMobileBoth && mode === 'bn' && 'Bengali text only \u00B7 Use arrow keys or buttons to turn pages'}
+        {!showMobileBoth && mode === 'en' && 'English translation only \u00B7 Use arrow keys or buttons to turn pages'}
       </div>
+
+      {/* Slide-down animation for toast */}
+      <style>{`
+        @keyframes slideDown {
+          from { transform: translateY(-100%); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }

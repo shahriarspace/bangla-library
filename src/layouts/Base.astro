@@ -1,4 +1,6 @@
 ---
+import ConsentManager from '../components/ConsentManager.jsx';
+
 interface Props {
   title: string;
   description?: string;
@@ -439,6 +441,26 @@ const canonicalUrl = canonicalPath ? `${siteUrl}${canonicalPath}` : `${siteUrl}$
     .footer-sep {
       opacity: 0.4;
     }
+    .footer-prefs-btn {
+      background: none;
+      border: none;
+      color: var(--gold-dim);
+      font-size: 0.8rem;
+      cursor: pointer;
+      padding: 8px 6px;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      font-family: inherit;
+      text-decoration: underline;
+      text-decoration-style: dotted;
+      opacity: 0.8;
+      transition: color 0.2s;
+    }
+    .footer-prefs-btn:hover {
+      color: var(--gold-light);
+      opacity: 1;
+    }
 
     /* SEARCH */
     #search { margin: 0 auto; max-width: 600px; }
@@ -557,8 +579,22 @@ const canonicalUrl = canonicalPath ? `${siteUrl}${canonicalPath}` : `${siteUrl}$
       <a href={`${base}/authors`}>Authors</a>
       <span class="footer-sep">&middot;</span>
       <a href={`${base}/about`}>About</a>
+      <span class="footer-sep">&middot;</span>
+      <a href={`${base}/privacy`}>Privacy</a>
+      <span class="footer-sep">&middot;</span>
+      <button class="footer-prefs-btn" id="open-prefs-btn">Privacy Preferences</button>
     </nav>
   </footer>
+
+  <!-- GDPR Consent Manager -->
+  <ConsentManager client:load privacyUrl={`${base}/privacy`} />
+
+  <!-- Footer privacy preferences trigger -->
+  <script is:inline>
+    document.getElementById('open-prefs-btn')?.addEventListener('click', function() {
+      document.dispatchEvent(new Event('bl:open-prefs'));
+    });
+  </script>
 
   <!-- Theme switcher + hamburger menu logic -->
   <script is:inline>

@@ -1,17 +1,42 @@
 ---
 import Base from '../layouts/Base.astro';
 import { getCollection } from 'astro:content';
+import FeaturedSection from '../components/FeaturedSection.jsx';
 
-const books = await getCollection('books');
+const allBooks = await getCollection('books', ({ data }) => data.status === 'published');
 const base = import.meta.env.BASE_URL;
 
+// Load analytics & coming soon data (graceful fallback)
+let reads = { reads: {}, likes: {} };
+let comingSoonData = [];
+try { reads = await import('../../data/analytics/reads.json'); } catch {}
+try { comingSoonData = (await import('../../data/coming-soon.json')).default; } catch {}
+
+// Recently added — sort by published_date descending
+const recentBooks = [...allBooks]
+  .sort((a, b) => (b.data.published_date || '').localeCompare(a.data.published_date || ''))
+  .slice(0, 6)
+  .map(b => ({ slug: b.id, ...b.data }));
+
+// Top read — sort by reads.json counts
+const readCounts = reads.reads || reads.default?.reads || {};
+const topRead = [...allBooks]
+  .sort((a, b) => (readCounts[b.id] || 0) - (readCounts[a.id] || 0))
+  .slice(0, 6)
+  .map(b => ({ slug: b.id, ...b.data, reads: readCounts[b.id] || 0 }));
+
+// Slideshow — combine top read + recent, deduplicate
+const slideshowBooks = [...topRead, ...recentBooks]
+  .filter((b, i, arr) => arr.findIndex(x => x.slug === b.slug) === i)
+  .slice(0, 8);
+
 // Group by category
-const byCategory = books.reduce((acc, book) => {
+const byCategory = allBooks.reduce((acc, book) => {
   const cat = book.data.category;
   if (!acc[cat]) acc[cat] = [];
   acc[cat].push(book);
   return acc;
-}, {} as Record<string, typeof books>);
+}, {} as Record<string, typeof allBooks>);
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -69,12 +94,22 @@ const jsonLd = {
       </div>
     </section>
 
+    <!-- Featured Section -->
+    <FeaturedSection
+      client:load
+      recentBooks={recentBooks}
+      comingSoon={comingSoonData}
+      topRead={topRead}
+      slideshowBooks={slideshowBooks}
+      basePath={base}
+    />
+
     <!-- Stats bar -->
     <section class="stats-section">
       <div class="container" style="display:flex;gap:40px;justify-content:center;flex-wrap:wrap;">
         {[
-          ['বই', 'Books', books.length],
-          ['লেখক', 'Authors', [...new Set(books.map(b => b.data.author_en))].length],
+          ['বই', 'Books', allBooks.length],
+          ['লেখক', 'Authors', [...new Set(allBooks.map(b => b.data.author_en))].length],
           ['বিভাগ', 'Categories', Object.keys(byCategory).length],
         ].map(([bn, en, count]) => (
           <div style="text-align:center;">

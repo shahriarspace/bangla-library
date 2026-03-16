@@ -2,23 +2,37 @@
 import Base from '../../layouts/Base.astro';
 import { getCollection } from 'astro:content';
 
-const books = await getCollection('books');
+const books = await getCollection('books', ({ data }) => data.status === 'published');
+const authors = await getCollection('authors');
 const base = import.meta.env.BASE_URL;
 
-// Group by author
-const byAuthor = books.reduce((acc, book) => {
-  const key = book.data.author_en;
-  if (!acc[key]) {
-    acc[key] = {
-      author_en: book.data.author_en,
-      author_bn: book.data.author_bn,
-      slug: book.data.author_en.toLowerCase().replace(/ /g, '-'),
-      books: [],
-    };
+// Build author data combining collection data with book counts
+const authorData = authors.map(author => {
+  const authorBooks = books.filter(b => b.data.author_slug === author.id);
+  return {
+    ...author,
+    books: authorBooks,
+  };
+}).sort((a, b) => b.books.length - a.books.length);
+
+// Also include any authors from books not yet in the authors collection
+const authorSlugsInCollection = new Set(authors.map(a => a.id));
+const orphanAuthors = books.reduce((acc, book) => {
+  const slug = book.data.author_slug;
+  if (slug && !authorSlugsInCollection.has(slug)) {
+    if (!acc[slug]) {
+      acc[slug] = {
+        id: slug,
+        data: { name_en: book.data.author_en, name_bn: book.data.author_bn },
+        books: [],
+      };
+    }
+    acc[slug].books.push(book);
   }
-  acc[key].books.push(book);
   return acc;
 }, {} as Record<string, any>);
+
+const allAuthors = [...authorData, ...Object.values(orphanAuthors)];
 ---
 
 <Base
@@ -30,26 +44,53 @@ const byAuthor = books.reduce((acc, book) => {
     <div class="container">
       <div style="text-align:center;margin-bottom:48px;">
         <h1 style="font-size:2rem;color:var(--gold-light);font-weight:400;margin-bottom:8px;">লেখকগণ · Authors</h1>
-        <p style="color:var(--text-dim);font-size:0.9rem;">{Object.keys(byAuthor).length} authors</p>
+        <p style="color:var(--text-dim);font-size:0.9rem;">{allAuthors.length} authors</p>
       </div>
 
       <div class="author-grid">
-        {Object.values(byAuthor).map(author => (
-          <div class="author-card">
-            <div style="font-size:1.3rem;font-family:var(--font-bn);color:var(--gold-light);margin-bottom:4px;">{author.author_bn}</div>
-            <div style="font-size:1rem;color:var(--gold);margin-bottom:16px;">{author.author_en}</div>
-            <div style="display:flex;flex-direction:column;gap:8px;">
+        {allAuthors.map(author => (
+          <a href={`${base}/authors/${author.id}`} class="author-card">
+            <div class="author-card-header">
+              {author.data.image_url ? (
+                <img
+                  src={author.data.image_url}
+                  alt={author.data.name_en}
+                  class="author-thumb"
+                  loading="lazy"
+                  width="64"
+                  height="64"
+                />
+              ) : (
+                <div class="author-thumb author-thumb-fallback">
+                  <span>{author.data.name_bn?.charAt(0) || '?'}</span>
+                </div>
+              )}
+              <div>
+                <div style="font-size:1.3rem;font-family:var(--font-bn);color:var(--gold-light);margin-bottom:4px;">{author.data.name_bn}</div>
+                <div style="font-size:1rem;color:var(--gold);">{author.data.name_en}</div>
+              </div>
+            </div>
+
+            {author.data.genres && author.data.genres.length > 0 && (
+              <div class="author-genres">
+                {author.data.genres.slice(0, 4).map(g => (
+                  <span class="genre-tag">{g}</span>
+                ))}
+              </div>
+            )}
+
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
               {author.books.map(book => (
-                <a href={`${base}/books/${book.id}`} class="author-book-link">
+                <div class="author-book-link">
                   <span>{book.data.title_en}</span>
                   <span style="color:var(--gold-dim);font-size:0.72rem;">{book.data.year}</span>
-                </a>
+                </div>
               ))}
             </div>
             <div style="margin-top:14px;font-size:0.72rem;color:var(--gold-dim);">
-              {author.books.length} {author.books.length === 1 ? 'book' : 'books'} in library
+              {author.books.length} {author.books.length === 1 ? 'book' : 'books'} in library · View profile &rarr;
             </div>
-          </div>
+          </a>
         ))}
       </div>
     </div>
@@ -66,10 +107,52 @@ const byAuthor = books.reduce((acc, book) => {
     gap: 20px;
   }
   .author-card {
+    display: block;
     padding: 28px;
     border: 1px solid var(--border);
     background: var(--bg-panel);
     transition: border-color 0.25s, background 0.25s;
+    text-decoration: none;
+  }
+  .author-card:hover {
+    border-color: var(--card-hover-border);
+    background: var(--card-hover-bg);
+  }
+  .author-card-header {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .author-thumb {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .author-thumb-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg2);
+    font-family: var(--font-bn);
+    font-size: 1.5rem;
+    color: var(--gold-dim);
+  }
+  .author-genres {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  .genre-tag {
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    border: 1px solid var(--border);
+    color: var(--gold-dim);
+    letter-spacing: 0.04em;
   }
   .author-book-link {
     font-size: 0.82rem;
@@ -80,11 +163,6 @@ const byAuthor = books.reduce((acc, book) => {
     padding: 12px 0;
     min-height: 44px;
     border-bottom: 1px solid var(--border);
-    text-decoration: none;
-    transition: color 0.2s;
-  }
-  .author-book-link:hover {
-    color: var(--gold-light);
   }
 
   @media (max-width: 768px) {

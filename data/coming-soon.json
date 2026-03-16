@@ -1,0 +1,17 @@
+[
+  {
+    "teaser": "A landmark 19th century novel",
+    "category": "Novel",
+    "expected": "This week"
+  },
+  {
+    "teaser": "Poetry collection by Bangladesh's national poet",
+    "category": "Poetry",
+    "expected": "Later this month"
+  },
+  {
+    "teaser": "A feminist classic ahead of its time",
+    "category": "Essay",
+    "expected": "Coming soon"
+  }
+]
