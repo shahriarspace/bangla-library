@@ -2,10 +2,11 @@
 import Base from '../../layouts/Base.astro';
 import { getCollection } from 'astro:content';
 
-const books = await getCollection('books');
+const books = await getCollection('books', ({ data }) => data.status === 'published');
 const base = import.meta.env.BASE_URL;
 
-const categories = [...new Set(books.map(b => b.data.category))];
+const categories = [...new Set(books.map(b => b.data.category))].sort();
+const authorList = [...new Set(books.map(b => b.data.author_en))].sort();
 ---
 
 <Base
@@ -16,30 +17,88 @@ const categories = [...new Set(books.map(b => b.data.category))];
   <main class="books-main">
     <div class="container">
 
-      <div style="text-align:center;margin-bottom:48px;">
+      <div style="text-align:center;margin-bottom:36px;">
         <h1 style="font-size:2rem;color:var(--gold-light);font-weight:400;margin-bottom:8px;">সকল বই · All Books</h1>
-        <p style="color:var(--text-dim);font-size:0.9rem;">{books.length} books available</p>
+        <p style="color:var(--text-dim);font-size:0.9rem;" id="book-count">{books.length} books available</p>
       </div>
 
-      <!-- Filter by category -->
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:40px;justify-content:center;">
-        <button onclick="filterBooks('all')" id="filter-all" class="filter-btn filter-btn-active">
-          All
-        </button>
+      <!-- Controls bar: search + filters + sort -->
+      <div class="controls-bar">
+        <!-- Search -->
+        <div class="control-group control-search">
+          <label for="book-search" class="control-label">Search</label>
+          <input
+            type="text"
+            id="book-search"
+            placeholder="Search by title or author..."
+            class="control-input"
+            autocomplete="off"
+          />
+        </div>
+
+        <!-- Category filter -->
+        <div class="control-group">
+          <label for="filter-category" class="control-label">Category</label>
+          <select id="filter-category" class="control-select">
+            <option value="all">All Categories</option>
+            {categories.map(cat => (
+              <option value={cat}>{cat}</option>
+            ))}
+          </select>
+        </div>
+
+        <!-- Author filter -->
+        <div class="control-group">
+          <label for="filter-author" class="control-label">Author</label>
+          <select id="filter-author" class="control-select">
+            <option value="all">All Authors</option>
+            {authorList.map(author => (
+              <option value={author}>{author}</option>
+            ))}
+          </select>
+        </div>
+
+        <!-- Sort -->
+        <div class="control-group">
+          <label for="sort-books" class="control-label">Sort by</label>
+          <select id="sort-books" class="control-select">
+            <option value="year-asc">Year (oldest first)</option>
+            <option value="year-desc">Year (newest first)</option>
+            <option value="title-asc">Title (A–Z)</option>
+            <option value="title-desc">Title (Z–A)</option>
+            <option value="passages-desc">Passages (most first)</option>
+            <option value="passages-asc">Passages (least first)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Quick category filter pills (still useful for fast taps) -->
+      <div class="filter-pills" id="filter-pills">
+        <button data-filter-cat="all" class="filter-btn filter-btn-active">All</button>
         {categories.map(cat => (
-          <button onclick={`filterBooks('${cat}')`} id={`filter-${cat}`} class="filter-btn">
-            {cat}
-          </button>
+          <button data-filter-cat={cat} class="filter-btn">{cat}</button>
         ))}
+      </div>
+
+      <!-- No results message -->
+      <div id="no-results" style="display:none;text-align:center;padding:40px 0;color:var(--text-dim);font-size:0.88rem;">
+        No books match your filters.
       </div>
 
       <!-- Book grid -->
       <div id="book-grid" class="book-grid">
-        {books.map(book => (
+        {books
+          .sort((a, b) => parseInt(a.data.year) - parseInt(b.data.year))
+          .map(book => (
           <a
             href={`${base}/books/${book.id}`}
             class="book-card"
             data-category={book.data.category}
+            data-author={book.data.author_en}
+            data-year={book.data.year}
+            data-title={book.data.title_en.toLowerCase()}
+            data-title-bn={book.data.title_bn}
+            data-passages={book.data.paragraphs.length}
           >
             <div style="font-size:1.25rem;font-family:var(--font-bn);color:var(--gold-light);margin-bottom:4px;">{book.data.title_bn}</div>
             <div style="font-size:0.88rem;color:var(--gold);margin-bottom:10px;font-style:italic;">{book.data.title_en}</div>
@@ -49,6 +108,11 @@ const categories = [...new Set(books.map(b => b.data.category))];
             <div style="margin-top:8px;display:inline-block;padding:2px 8px;border:1px solid var(--border);font-size:0.65rem;letter-spacing:0.1em;color:var(--gold-dim);text-transform:uppercase;">
               {book.data.category}
             </div>
+            {book.data.description_en && (
+              <div style="margin-top:10px;font-size:0.75rem;color:var(--text-dim);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+                {book.data.description_en}
+              </div>
+            )}
             <div style="margin-top:14px;font-size:0.72rem;letter-spacing:0.08em;color:var(--gold-dim);">
               {book.data.paragraphs.length} passages · Read &rarr;
             </div>
@@ -63,6 +127,66 @@ const categories = [...new Set(books.map(b => b.data.category))];
   .books-main {
     padding: 60px 24px;
   }
+
+  /* Controls bar */
+  .controls-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .control-search {
+    grid-column: 1 / -1;
+  }
+  .control-label {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .control-input,
+  .control-select {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    background: var(--bg-panel);
+    color: var(--text);
+    font-size: 0.82rem;
+    font-family: Georgia, serif;
+    border-radius: 2px;
+    min-height: 44px;
+    transition: border-color 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .control-input:focus,
+  .control-select:focus {
+    outline: none;
+    border-color: var(--card-hover-border);
+  }
+  .control-select {
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a08050' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+
+  /* Filter pills */
+  .filter-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+    justify-content: center;
+  }
+
   .book-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
@@ -106,6 +230,12 @@ const categories = [...new Set(books.map(b => b.data.category))];
     .book-card {
       padding: 18px;
     }
+    .controls-bar {
+      grid-template-columns: 1fr;
+    }
+    .control-search {
+      grid-column: 1;
+    }
   }
   @media (max-width: 480px) {
     .books-main {
@@ -115,23 +245,123 @@ const categories = [...new Set(books.map(b => b.data.category))];
 </style>
 
 <script is:inline>
-  function filterBooks(category) {
-    var cards = document.querySelectorAll('.book-card');
-    cards.forEach(function(card) {
-      if (category === 'all' || card.dataset.category === category) {
-        card.style.display = 'block';
-      } else {
-        card.style.display = 'none';
-      }
-    });
-    // Update button states via classes
-    document.querySelectorAll('.filter-btn').forEach(function(btn) {
-      btn.classList.remove('filter-btn-active');
-    });
-    var active = document.getElementById('filter-' + category);
-    if (active) {
-      active.classList.add('filter-btn-active');
+  (function() {
+    var grid = document.getElementById('book-grid');
+    var cards = Array.from(grid.querySelectorAll('.book-card'));
+    var noResults = document.getElementById('no-results');
+    var countEl = document.getElementById('book-count');
+    var searchInput = document.getElementById('book-search');
+    var catSelect = document.getElementById('filter-category');
+    var authorSelect = document.getElementById('filter-author');
+    var sortSelect = document.getElementById('sort-books');
+    var pills = document.querySelectorAll('[data-filter-cat]');
+
+    var state = {
+      category: 'all',
+      author: 'all',
+      search: '',
+      sort: 'year-asc',
+    };
+
+    function applyFilters() {
+      var searchLower = state.search.toLowerCase();
+      var visible = 0;
+
+      cards.forEach(function(card) {
+        var matchCat = state.category === 'all' || card.dataset.category === state.category;
+        var matchAuthor = state.author === 'all' || card.dataset.author === state.author;
+        var matchSearch = !searchLower ||
+          card.dataset.title.indexOf(searchLower) !== -1 ||
+          card.dataset.author.toLowerCase().indexOf(searchLower) !== -1 ||
+          card.dataset.titleBn.indexOf(searchLower) !== -1;
+
+        if (matchCat && matchAuthor && matchSearch) {
+          card.style.display = 'block';
+          visible++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      noResults.style.display = visible === 0 ? 'block' : 'none';
+      countEl.textContent = visible + ' of ' + cards.length + ' books shown';
     }
-  }
-  window.filterBooks = filterBooks;
+
+    function applySort() {
+      var sorted = cards.slice();
+      var parts = state.sort.split('-');
+      var field = parts[0];
+      var dir = parts[1] === 'desc' ? -1 : 1;
+
+      sorted.sort(function(a, b) {
+        var va, vb;
+        if (field === 'year') {
+          va = parseInt(a.dataset.year) || 0;
+          vb = parseInt(b.dataset.year) || 0;
+        } else if (field === 'title') {
+          va = a.dataset.title;
+          vb = b.dataset.title;
+          return va < vb ? -1 * dir : va > vb ? 1 * dir : 0;
+        } else if (field === 'passages') {
+          va = parseInt(a.dataset.passages) || 0;
+          vb = parseInt(b.dataset.passages) || 0;
+        }
+        return (va - vb) * dir;
+      });
+
+      sorted.forEach(function(card) {
+        grid.appendChild(card);
+      });
+    }
+
+    function update() {
+      applySort();
+      applyFilters();
+    }
+
+    // Sync pills with dropdown
+    function syncPills() {
+      pills.forEach(function(p) {
+        p.classList.remove('filter-btn-active');
+        if (p.dataset.filterCat === state.category) {
+          p.classList.add('filter-btn-active');
+        }
+      });
+    }
+
+    // Event listeners
+    searchInput.addEventListener('input', function() {
+      state.search = this.value;
+      update();
+    });
+
+    catSelect.addEventListener('change', function() {
+      state.category = this.value;
+      syncPills();
+      update();
+    });
+
+    authorSelect.addEventListener('change', function() {
+      state.author = this.value;
+      update();
+    });
+
+    sortSelect.addEventListener('change', function() {
+      state.sort = this.value;
+      update();
+    });
+
+    // Category pills click handler
+    pills.forEach(function(pill) {
+      pill.addEventListener('click', function() {
+        state.category = this.dataset.filterCat;
+        catSelect.value = state.category;
+        syncPills();
+        update();
+      });
+    });
+
+    // Initialize
+    syncPills();
+  })();
 </script>

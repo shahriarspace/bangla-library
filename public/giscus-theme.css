@@ -1,0 +1,86 @@
+/* public/giscus-theme.css */
+/* Bangla Library — custom Giscus theme */
+/* Matches site: dark parchment background, gold accents */
+
+:root {
+  /* Background colours */
+  --color-canvas-default:        #1c1812;
+  --color-canvas-subtle:         #12100e;
+  --color-canvas-inset:          #0e0c0a;
+
+  /* Border colours */
+  --color-border-default:        rgba(200, 160, 80, 0.2);
+  --color-border-muted:          rgba(200, 160, 80, 0.1);
+
+  /* Text colours */
+  --color-fg-default:            #d4b87a;
+  --color-fg-muted:              #a08050;
+  --color-fg-subtle:             #6a5030;
+  --color-fg-on-emphasis:        #12100e;
+
+  /* Accent (links, buttons) */
+  --color-accent-fg:             #c8a050;
+  --color-accent-emphasis:       #c8a050;
+  --color-accent-subtle:         rgba(200, 160, 80, 0.1);
+  --color-accent-muted:          rgba(200, 160, 80, 0.2);
+
+  /* Buttons */
+  --color-btn-bg:                transparent;
+  --color-btn-border:            rgba(200, 160, 80, 0.3);
+  --color-btn-hover-bg:          rgba(200, 160, 80, 0.1);
+  --color-btn-hover-border:      rgba(200, 160, 80, 0.5);
+  --color-btn-text:              #c8a050;
+  --color-btn-primary-bg:        #c8a050;
+  --color-btn-primary-text:      #12100e;
+  --color-btn-primary-border:    #c8a050;
+  --color-btn-primary-hover-bg:  #f0dfa0;
+
+  /* Input fields */
+  --color-input-bg:              #12100e;
+  --color-input-border:          rgba(200, 160, 80, 0.2);
+  --color-input-focus-border:    rgba(200, 160, 80, 0.5);
+  --color-input-disabled-bg:     #0e0c0a;
+
+  /* Comment header */
+  --color-timeline-badge-bg:     #1c1812;
+  --color-reactions-btn-hover-bg: rgba(200, 160, 80, 0.1);
+
+  /* Neutral */
+  --color-neutral-emphasis-plus: rgba(200, 160, 80, 0.15);
+  --color-neutral-emphasis:      rgba(200, 160, 80, 0.1);
+  --color-neutral-muted:         rgba(200, 160, 80, 0.05);
+  --color-neutral-subtle:        rgba(200, 160, 80, 0.03);
+
+  /* Typography */
+  --font-family:                 'Lora', Georgia, serif;
+  --font-size-small:             0.8rem;
+  --font-size-body:              0.9rem;
+  --font-weight-normal:          400;
+  --font-weight-semibold:        600;
+
+  /* Misc */
+  --border-radius:               2px;
+  --box-shadow-small:            0 2px 8px rgba(0,0,0,0.4);
+  --box-shadow-medium:           0 4px 16px rgba(0,0,0,0.6);
+}
+
+/* Remove Giscus branding link (optional) */
+.giscus-frame {
+  border: 1px solid rgba(200, 160, 80, 0.15);
+  border-radius: 2px;
+}
+
+/* Style the sign-in prompt */
+.giscus .sign-in {
+  color: var(--color-fg-muted);
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+/* Reactions bar */
+.giscus .reaction-button {
+  border-color: rgba(200, 160, 80, 0.2) !important;
+}
+.giscus .reaction-button:hover {
+  background: rgba(200, 160, 80, 0.1) !important;
+}

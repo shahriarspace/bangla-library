@@ -2,7 +2,9 @@
 import Base from '../../layouts/Base.astro';
 import BilingualReader from '../../components/BilingualReader.jsx';
 import InteractionIsland from '../../components/InteractionIsland.jsx';
+import ReadCounter from '../../components/ReadCounter.jsx';
 import { getCollection, getEntry } from 'astro:content';
+import readsJson from '../../../data/analytics/reads.json';
 
 export async function getStaticPaths() {
   const books = await getCollection('books');
@@ -13,6 +15,10 @@ const { slug } = Astro.params;
 const entry = await getEntry('books', slug);
 const book = entry.data;
 const base = import.meta.env.BASE_URL;
+
+// Read counts from analytics data
+const initialReads = (readsJson.reads && readsJson.reads[slug]) || 0;
+const initialLikes = (readsJson.likes && readsJson.likes[slug]) || 0;
 
 const bookDescription = book.description_en
   || `Read ${book.title_en} by ${book.author_en} in Bangla and English — side-by-side bilingual reading with ${book.paragraphs.length} passages.`;
@@ -132,6 +138,8 @@ const jsonLd = [
     <section class="reader-section">
       <div class="container">
         <BilingualReader client:load book={book} base={base} />
+        <!-- ReadCounter sentinel: observes reader visibility, fires after 30s -->
+        <ReadCounter client:load slug={slug} initialCount={initialReads} />
       </div>
     </section>
 
@@ -140,8 +148,8 @@ const jsonLd = [
       client:load
       slug={slug}
       bookTitle={book.title_en}
-      initialLikes={0}
-      initialReads={0}
+      initialLikes={initialLikes}
+      initialReads={initialReads}
     />
 
     <!-- Related / nav -->

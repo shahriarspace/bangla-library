@@ -14,9 +14,12 @@ const GISCUS_REPO_ID = 'R_kgDORm10gg';
 const GISCUS_CATEGORY = 'General';
 const GISCUS_CATEGORY_ID = 'DIC_kwDORm10gs4C4YRq';
 
+// Custom Giscus theme CSS URL (served from public/)
+const GISCUS_CUSTOM_THEME_URL = 'https://shahriarspace.github.io/bangla-library/giscus-theme.css';
+
 // Map site themes to Giscus themes
 const GISCUS_THEME_MAP = {
-  'antique-gold': 'dark',
+  'antique-gold': GISCUS_CUSTOM_THEME_URL,
   'classic-white': 'light',
   'sepia': 'light',
   'dark': 'dark_dimmed',
