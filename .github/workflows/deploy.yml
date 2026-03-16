@@ -48,3 +48,27 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  notify-search-engines:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping IndexNow (Bing, Yandex, DuckDuckGo)
+        run: |
+          curl -s -X POST "https://api.indexnow.org/IndexNow" \
+            -H "Content-Type: application/json; charset=utf-8" \
+            -d '{
+              "host": "shahriarspace.github.io",
+              "key": "bangla-library-indexnow",
+              "keyLocation": "https://shahriarspace.github.io/bangla-library/bangla-library-indexnow.txt",
+              "urlList": [
+                "https://shahriarspace.github.io/bangla-library/",
+                "https://shahriarspace.github.io/bangla-library/books/",
+                "https://shahriarspace.github.io/bangla-library/authors/",
+                "https://shahriarspace.github.io/bangla-library/about/",
+                "https://shahriarspace.github.io/bangla-library/books/bishad-sindhu/",
+                "https://shahriarspace.github.io/bangla-library/books/gitanjali/",
+                "https://shahriarspace.github.io/bangla-library/books/moyurakkhi/"
+              ]
+            }' || true
+          echo "IndexNow pinged successfully"
