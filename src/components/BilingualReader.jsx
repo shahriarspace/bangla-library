@@ -311,8 +311,8 @@ function ContinueReadingToast({ paragraphId, onContinue, onDismiss }) {
 
   return (
     <div style={{
-      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-      background: 'var(--controls-bg)',
+      position: 'fixed', top: '60px', left: 0, right: 0, zIndex: 101,
+      background: 'var(--bg)',
       borderBottom: '1px solid var(--border)',
       padding: '10px 16px',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -320,7 +320,7 @@ function ContinueReadingToast({ paragraphId, onContinue, onDismiss }) {
       fontSize: '0.82rem',
       color: 'var(--text)',
       animation: 'slideDown 0.3s ease',
-      boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
     }}>
       <span>You left off at paragraph {paragraphId}</span>
       <button
