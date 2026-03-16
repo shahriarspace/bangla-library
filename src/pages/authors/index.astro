@@ -192,6 +192,16 @@ const timelineAuthors = allAuthors.map(a => ({
     border-bottom: 1px solid var(--border);
   }
 
+  /* Lifespan bars: hidden by default, shown on wider screens */
+  :global(.timeline-lifespan-bar) {
+    display: none;
+  }
+  @media (min-width: 769px) {
+    :global(.timeline-lifespan-bar) {
+      display: block;
+    }
+  }
+
   @media (max-width: 768px) {
     .authors-main {
       padding: 40px 16px;

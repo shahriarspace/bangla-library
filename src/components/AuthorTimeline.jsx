@@ -280,14 +280,13 @@ export default function AuthorTimeline({ authors, baseUrl = '' }) {
                       </div>
                     </div>
 
-                    {/* Life span bar */}
+                    {/* Life span bar — hidden by default, shown on wider screens via CSS */}
                     <div style={{
                       width: '120px', height: '6px',
                       background: 'var(--bg2)',
                       borderRadius: '3px',
                       position: 'relative',
                       flexShrink: 0,
-                      display: 'none', // hidden on mobile, shown via media query workaround
                     }} className="timeline-lifespan-bar">
                       <div style={{
                         position: 'absolute',

@@ -1,5 +1,6 @@
 ---
 import ConsentManager from '../components/ConsentManager.jsx';
+import { DONATE_URL } from '../site-config.js';
 
 interface Props {
   title: string;
@@ -422,6 +423,23 @@ const canonicalUrl = canonicalPath ? `${siteUrl}${canonicalPath}` : `${siteUrl}$
       letter-spacing: 0.05em;
       transition: border-color 0.3s ease, color 0.3s ease;
     }
+    .donate-btn {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 16px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 0.78rem;
+      color: var(--gold-dim);
+      letter-spacing: 0.04em;
+      transition: all 0.25s;
+      min-height: 44px;
+    }
+    .donate-btn:hover {
+      border-color: var(--gold);
+      color: var(--gold-light);
+      background: var(--highlight);
+    }
     .footer-nav {
       margin-top: 12px;
       font-size: 0.8rem;
@@ -572,6 +590,11 @@ const canonicalUrl = canonicalPath ? `${siteUrl}${canonicalPath}` : `${siteUrl}$
   <footer>
     <div>বাংলা পাঠাগার · <strong>Bangla Library</strong> — A free bilingual digital library of classical Bengali literature</div>
     <div style="margin-top:8px; opacity:0.6;">All texts are in the public domain · Built with <a href="https://astro.build" rel="noopener">Astro</a> + <a href="https://react.dev" rel="noopener">React</a></div>
+    <div style="margin-top:12px;">
+      <a href={DONATE_URL} rel="noopener" target="_blank" class="donate-btn" title="Support Bangla Library">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;margin-top:-1px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Support this project
+      </a>
+    </div>
     <nav class="footer-nav" aria-label="Footer navigation">
       <a href={base || '/'}>Home</a>
       <span class="footer-sep">&middot;</span>

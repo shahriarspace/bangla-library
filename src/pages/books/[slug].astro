@@ -3,6 +3,8 @@ import Base from '../../layouts/Base.astro';
 import BilingualReader from '../../components/BilingualReader.jsx';
 import InteractionIsland from '../../components/InteractionIsland.jsx';
 import ReadCounter from '../../components/ReadCounter.jsx';
+import ShareButtons from '../../components/ShareButtons.jsx';
+import { WORKER_URL } from '../../site-config.js';
 import { getCollection, getEntry } from 'astro:content';
 import readsJson from '../../../data/analytics/reads.json';
 
@@ -108,6 +110,17 @@ const jsonLd = [
           {book.description_en}
         </p>
       )}
+      <!-- Share buttons -->
+      <div style="margin-top:24px;">
+        <ShareButtons
+          client:load
+          bookTitle={book.title_en}
+          bookTitleBn={book.title_bn}
+          authorEn={book.author_en}
+          slug={slug}
+          siteUrl="https://shahriarspace.github.io/bangla-library"
+        />
+      </div>
       <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:28px auto 0;"></div>
     </section>
 
@@ -123,11 +136,13 @@ const jsonLd = [
       </div>
     )}
 
-    <!-- SEO-visible text (visually hidden but crawlable by search engines) -->
+    <!-- SEO-visible text (visually hidden but crawlable by search engines & Pagefind) -->
     <div class="sr-only" data-pagefind-body>
-      <h2>{book.title_en} - {book.title_bn} by {book.author_en}</h2>
-      {book.paragraphs.map(p => (
-        <div>
+      <h2 data-pagefind-meta="title">{book.title_en} - {book.title_bn} by {book.author_en}</h2>
+      <p data-pagefind-meta="author">{book.author_en} ({book.author_bn})</p>
+      <p data-pagefind-meta="category">{book.category}</p>
+      {book.paragraphs.map((p, i) => (
+        <div data-pagefind-weight={i === 0 ? "5" : "1"}>
           <p lang="bn">{p.bn}</p>
           <p lang="en">{p.en}</p>
         </div>
@@ -137,9 +152,9 @@ const jsonLd = [
     <!-- Bilingual Reader (React Island) -->
     <section class="reader-section">
       <div class="container">
-        <BilingualReader client:load book={book} base={base} />
+        <BilingualReader client:load book={book} base={base} workerUrl={WORKER_URL} />
         <!-- ReadCounter sentinel: observes reader visibility, fires after 30s -->
-        <ReadCounter client:load slug={slug} initialCount={initialReads} />
+        <ReadCounter client:load slug={slug} initialCount={initialReads} workerUrl={WORKER_URL} />
       </div>
     </section>
 
@@ -150,6 +165,7 @@ const jsonLd = [
       bookTitle={book.title_en}
       initialLikes={initialLikes}
       initialReads={initialReads}
+      workerUrl={WORKER_URL}
     />
 
     <!-- Related / nav -->

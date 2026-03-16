@@ -1098,7 +1098,7 @@ function SingleLanguageMode({ paragraphs, lang, page, totalPages, setPage, activ
 // ---------------------------------------------------------------------------
 // Main Component
 // ---------------------------------------------------------------------------
-export default function BilingualReader({ book, base = '' }) {
+export default function BilingualReader({ book, base = '', workerUrl = '' }) {
   const prefs = useMemo(() => loadPrefs(), []);
 
   // Mobile reader breakpoint at 640px (spec requirement)
@@ -1373,6 +1373,7 @@ export default function BilingualReader({ book, base = '' }) {
         bookTitle={book.title_en || book.title_bn || ''}
         authorEn={book.author_en || ''}
         isMobile={isMobileReader}
+        workerUrl={workerUrl}
       />
     </div>
   );
