@@ -872,8 +872,35 @@ function SideMode({ paragraphs, activeId, setActiveId, fontSize, containerRef, i
     const src = source.current;
     const tgt = target.current;
     if (!src || !tgt) { setIsSyncing(false); return; }
-    const ratio = src.scrollTop / Math.max(1, src.scrollHeight - src.clientHeight);
-    tgt.scrollTop = ratio * (tgt.scrollHeight - tgt.clientHeight);
+
+    // Paragraph-level sync: find the topmost visible paragraph in source,
+    // then scroll target so the same paragraph aligns to the same position.
+    const srcChildren = src.querySelectorAll('[data-paragraph-id]');
+    let bestChild = null;
+    let bestOffset = 0;
+    for (const child of srcChildren) {
+      const rect = child.getBoundingClientRect();
+      const srcRect = src.getBoundingClientRect();
+      const relTop = rect.top - srcRect.top;
+      // Find the first paragraph whose top is at or just above the container top
+      if (relTop <= 10) {
+        bestChild = child;
+        bestOffset = relTop;
+      } else {
+        break;
+      }
+    }
+
+    if (bestChild) {
+      const pid = bestChild.getAttribute('data-paragraph-id');
+      const tgtChild = tgt.querySelector(`[data-paragraph-id="${pid}"]`);
+      if (tgtChild) {
+        const tgtChildTop = tgtChild.offsetTop - tgt.offsetTop;
+        // Align target paragraph to the same relative offset as source
+        tgt.scrollTop = tgtChildTop - bestOffset;
+      }
+    }
+
     requestAnimationFrame(() => setIsSyncing(false));
   }, [isSyncing]);
 
