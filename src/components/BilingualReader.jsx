@@ -862,48 +862,6 @@ function pageNavBtnStyle(disabled) {
 // Mode 3: Side by Side
 // ---------------------------------------------------------------------------
 function SideMode({ paragraphs, activeId, setActiveId, fontSize, containerRef, isMobile }) {
-  const [isSyncing, setIsSyncing] = useState(false);
-  const leftRef = useRef(null);
-  const rightRef = useRef(null);
-
-  const syncScroll = useCallback((source, target) => {
-    if (isSyncing) return;
-    setIsSyncing(true);
-    const src = source.current;
-    const tgt = target.current;
-    if (!src || !tgt) { setIsSyncing(false); return; }
-
-    // Paragraph-level sync: find the topmost visible paragraph in source,
-    // then scroll target so the same paragraph aligns to the same position.
-    const srcChildren = src.querySelectorAll('[data-paragraph-id]');
-    let bestChild = null;
-    let bestOffset = 0;
-    for (const child of srcChildren) {
-      const rect = child.getBoundingClientRect();
-      const srcRect = src.getBoundingClientRect();
-      const relTop = rect.top - srcRect.top;
-      // Find the first paragraph whose top is at or just above the container top
-      if (relTop <= 10) {
-        bestChild = child;
-        bestOffset = relTop;
-      } else {
-        break;
-      }
-    }
-
-    if (bestChild) {
-      const pid = bestChild.getAttribute('data-paragraph-id');
-      const tgtChild = tgt.querySelector(`[data-paragraph-id="${pid}"]`);
-      if (tgtChild) {
-        const tgtChildTop = tgtChild.offsetTop - tgt.offsetTop;
-        // Align target paragraph to the same relative offset as source
-        tgt.scrollTop = tgtChildTop - bestOffset;
-      }
-    }
-
-    requestAnimationFrame(() => setIsSyncing(false));
-  }, [isSyncing]);
-
   const handleClick = (id) => {
     setActiveId(activeId === id ? null : id);
   };
@@ -912,105 +870,89 @@ function SideMode({ paragraphs, activeId, setActiveId, fontSize, containerRef, i
   const mobileBnSize = fontSize === 'sm' ? '0.78rem' : fontSize === 'md' ? '0.88rem' : '1.05rem';
   const mobileEnSize = fontSize === 'sm' ? '0.72rem' : fontSize === 'md' ? '0.82rem' : '0.95rem';
 
-  const colStyle = {
-    height: '70vh',
-    overflowY: 'auto',
-    padding: isMobile ? '10px 6px' : '28px 24px',
-    scrollbarWidth: 'thin',
-    scrollbarColor: 'var(--scrollbar-thumb) transparent',
-    WebkitOverflowScrolling: 'touch',
-  };
-
   return (
     <div ref={containerRef} style={{
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gap: '1px',
-      background: 'var(--border)',
       border: '1px solid var(--border)',
       borderRadius: '4px',
       overflow: 'hidden',
       maxWidth: '100%',
     }}>
-      {/* Bengali column */}
-      <div
-        ref={leftRef}
-        style={{ ...colStyle, background: 'var(--bg)' }}
-        onScroll={() => syncScroll(leftRef, rightRef)}
-      >
+      {/* Column headers */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '1px',
+        background: 'var(--border)',
+      }}>
         <div style={{
+          background: 'var(--bg)',
+          padding: isMobile ? '8px 6px' : '14px 24px',
           fontSize: isMobile ? '0.55rem' : '0.6rem',
           letterSpacing: '0.15em', color: 'var(--gold)',
-          textAlign: 'center', marginBottom: isMobile ? '8px' : '20px', opacity: 0.6,
+          textAlign: 'center', opacity: 0.6,
           textTransform: 'uppercase',
         }}>
           {isMobile ? 'Bengali' : 'Bengali Original'}
         </div>
-        {paragraphs.map(p => (
-          <div
-            key={p.id}
-            id={`p${p.id}`}
-            data-paragraph-id={p.id}
-            onClick={() => handleClick(p.id)}
-            style={{
-              padding: isMobile ? '8px 4px' : '16px 14px',
-              marginBottom: '4px',
-              cursor: 'pointer',
-              borderLeft: activeId === p.id ? '2px solid var(--border-active)' : '2px solid transparent',
-              background: activeId === p.id ? 'var(--highlight)' : 'transparent',
-              borderRadius: '2px',
-              transition: 'all 0.15s',
-              fontSize: isMobile ? mobileBnSize : FONT_SIZES[fontSize].bn,
-              fontFamily: 'var(--font-bn)',
-              lineHeight: isMobile ? '1.8' : '2.1',
-              color: activeId === p.id ? 'var(--text-active)' : 'var(--text-bn)',
-              wordBreak: 'break-word',
-            }}
-          >
-            {p.bn}
-          </div>
-        ))}
-      </div>
-
-      {/* English column */}
-      <div
-        ref={rightRef}
-        style={{ ...colStyle, background: 'var(--bg)' }}
-        onScroll={() => syncScroll(rightRef, leftRef)}
-      >
         <div style={{
+          background: 'var(--bg)',
+          padding: isMobile ? '8px 6px' : '14px 24px',
           fontSize: isMobile ? '0.55rem' : '0.6rem',
           letterSpacing: '0.15em', color: 'var(--gold)',
-          textAlign: 'center', marginBottom: isMobile ? '8px' : '20px', opacity: 0.6,
+          textAlign: 'center', opacity: 0.6,
           textTransform: 'uppercase',
         }}>
           {isMobile ? 'English' : 'English Translation'}
         </div>
-        {paragraphs.map(p => (
-          <div
-            key={p.id}
-            data-paragraph-id={p.id}
-            onClick={() => handleClick(p.id)}
-            style={{
-              padding: isMobile ? '8px 4px' : '16px 14px',
-              marginBottom: '4px',
-              cursor: 'pointer',
-              borderLeft: activeId === p.id ? '2px solid var(--border-active)' : '2px solid transparent',
-              background: activeId === p.id ? 'var(--highlight)' : 'transparent',
-              borderRadius: '2px',
-              transition: 'all 0.15s',
-              fontSize: isMobile ? mobileEnSize : FONT_SIZES[fontSize].en,
-              fontFamily: 'var(--font-en)',
-              fontStyle: 'italic',
-              lineHeight: isMobile ? '1.6' : '1.9',
-              color: activeId === p.id ? 'var(--text-active)' : 'var(--text-en)',
-              wordBreak: 'break-word',
-            }}
-          >
+      </div>
+
+      {/* Paragraph rows — each row is a 2-column grid so Bengali and English stay aligned */}
+      {paragraphs.map(p => (
+        <div
+          key={p.id}
+          id={`p${p.id}`}
+          data-paragraph-id={p.id}
+          onClick={() => handleClick(p.id)}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '1px',
+            background: 'var(--border)',
+            cursor: 'pointer',
+            borderBottom: '1px solid var(--border)',
+          }}
+        >
+          {/* Bengali cell */}
+          <div style={{
+            padding: isMobile ? '8px 6px' : '16px 14px',
+            background: activeId === p.id ? 'var(--highlight)' : 'var(--bg)',
+            borderLeft: activeId === p.id ? '2px solid var(--border-active)' : '2px solid transparent',
+            transition: 'all 0.15s',
+            fontSize: isMobile ? mobileBnSize : FONT_SIZES[fontSize].bn,
+            fontFamily: 'var(--font-bn)',
+            lineHeight: isMobile ? '1.8' : '2.1',
+            color: activeId === p.id ? 'var(--text-active)' : 'var(--text-bn)',
+            wordBreak: 'break-word',
+          }}>
+            {p.bn}
+          </div>
+          {/* English cell */}
+          <div style={{
+            padding: isMobile ? '8px 6px' : '16px 14px',
+            background: activeId === p.id ? 'var(--highlight)' : 'var(--bg)',
+            borderLeft: activeId === p.id ? '2px solid var(--border-active)' : '2px solid transparent',
+            transition: 'all 0.15s',
+            fontSize: isMobile ? mobileEnSize : FONT_SIZES[fontSize].en,
+            fontFamily: 'var(--font-en)',
+            fontStyle: 'italic',
+            lineHeight: isMobile ? '1.6' : '1.9',
+            color: activeId === p.id ? 'var(--text-active)' : 'var(--text-en)',
+            wordBreak: 'break-word',
+          }}>
             {p.en}
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -1378,7 +1320,7 @@ export default function BilingualReader({ book, base = '', workerUrl = '' }) {
         {showMobileBoth && 'Scroll to read both languages \u00B7 Tap any passage to highlight'}
         {!showMobileBoth && mode === 'book' && 'Click any passage to highlight \u00B7 Scroll to read'}
         {!showMobileBoth && mode === 'paginated' && 'Use arrow keys or buttons to turn pages \u00B7 Click to highlight'}
-        {!showMobileBoth && mode === 'side' && 'Scroll syncs both columns \u00B7 Click to highlight'}
+        {!showMobileBoth && mode === 'side' && 'Paragraphs aligned side by side \u00B7 Click to highlight'}
         {!showMobileBoth && mode === 'bn' && 'Bengali text only \u00B7 Use arrow keys or buttons to turn pages'}
         {!showMobileBoth && mode === 'en' && 'English translation only \u00B7 Use arrow keys or buttons to turn pages'}
       </div>
