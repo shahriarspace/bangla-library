@@ -23,6 +23,10 @@ const books = defineCollection({
     source: z.string().optional(),
     translation_reviewed: z.boolean().default(false),
     copyright_notice: z.string().optional(),
+    fun_facts: z.array(z.object({
+      type: z.enum(['film', 'award', 'cultural', 'history', 'translation', 'music', 'publication', 'influence', 'controversy', 'general']),
+      text: z.string(),
+    })).default([]),
     paragraphs: z.array(z.object({
       id: z.number(),
       bn: z.string(),

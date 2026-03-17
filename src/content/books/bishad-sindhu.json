@@ -13,6 +13,24 @@
   "original_publisher": "Self-published",
   "source": "Public domain",
   "cover_image": "/bangla-library/covers/bishad-sindhu.jpg",
+  "fun_facts": [
+    {
+      "type": "publication",
+      "text": "Bishad Sindhu was published in three volumes over six years (1885–1891) and became the most widely read Bengali prose work of the 19th century among Muslim readers in Bengal."
+    },
+    {
+      "type": "film",
+      "text": "The novel was adapted into a Bangladeshi film in 1993 directed by Syed Salahuddin Zaki. The film brought the epic Karbala narrative to a wider audience beyond readers of the original text."
+    },
+    {
+      "type": "cultural",
+      "text": "Bishad Sindhu was so popular in rural Bengal that it was commonly read aloud during Muharram gatherings. Many families owned a copy even if they owned no other book."
+    },
+    {
+      "type": "history",
+      "text": "Mir Mosharraf Hossain wrote Bishad Sindhu during a period of great social change in Bengal. It is considered the first major novel by a Bengali Muslim author, paving the way for an entire literary tradition."
+    }
+  ],
   "paragraphs": [
     {
       "id": 1,

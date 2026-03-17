@@ -12,6 +12,20 @@
   "description_en": "A novel by Humayun Ahmed about identity, memory, and the search for meaning.",
   "description_bn": "হুমায়ূন আহমেদের একটি উপন্যাস — পরিচয়, স্মৃতি ও অর্থের সন্ধানের গল্প।",
   "copyright_notice": "This work is under copyright. It is included here as a translation demo only and may be removed. All rights belong to the estate of Humayun Ahmed.",
+  "fun_facts": [
+    {
+      "type": "cultural",
+      "text": "Moyurakkhi features Humayun Ahmed's iconic character Himu — a barefoot wanderer in a yellow panjabi who became a cultural phenomenon in Bangladesh, inspiring a real-world subculture of young people imitating his style."
+    },
+    {
+      "type": "film",
+      "text": "Several of Humayun Ahmed's Himu novels have been adapted for television dramas, which consistently drew the largest audiences in Bangladeshi broadcasting history."
+    },
+    {
+      "type": "general",
+      "text": "The title 'Moyurakkhi' (ময়ূরাক্ষী) refers to a river in West Bengal, India. Humayun Ahmed often named his works after evocative Bengali places and natural imagery."
+    }
+  ],
   "paragraphs": [
     {
       "id": 1,

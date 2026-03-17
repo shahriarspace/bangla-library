@@ -13,6 +13,24 @@
   "original_publisher": "India Society of London",
   "source": "Public domain",
   "cover_image": "/bangla-library/covers/gitanjali.jpg",
+  "fun_facts": [
+    {
+      "type": "award",
+      "text": "Gitanjali won Rabindranath Tagore the Nobel Prize in Literature in 1913, making him the first non-European laureate. The Swedish Academy praised its 'profoundly sensitive, fresh and beautiful verse.'"
+    },
+    {
+      "type": "translation",
+      "text": "The English Gitanjali is not a direct translation of the Bengali original. Tagore selected 53 poems from the Bengali Gitanjali and added 50 more from other collections, freely re-rendering them in English prose poetry."
+    },
+    {
+      "type": "influence",
+      "text": "W.B. Yeats wrote the introduction to the 1912 English edition and was so moved that he reportedly carried the manuscript everywhere, reading it on the London Underground."
+    },
+    {
+      "type": "cultural",
+      "text": "Several Gitanjali poems have been set to music as Rabindra Sangeet and are sung across Bengal to this day. The poem 'Where the mind is without fear' is recited in schools throughout India and Bangladesh."
+    }
+  ],
   "paragraphs": [
     {
       "id": 1,
