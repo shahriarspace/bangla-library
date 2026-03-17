@@ -283,17 +283,17 @@ const jsonLd = [
   .book-header-layout {
     display: flex;
     align-items: flex-start;
-    gap: 36px;
-    max-width: 1100px;
+    gap: 28px;
+    max-width: 980px;
     margin: 0 auto;
     text-align: left;
     position: relative;
     z-index: 1;
   }
   .book-cover-wrapper {
-    width: 180px;
-    min-width: 180px;
-    height: 260px;
+    width: 200px;
+    min-width: 200px;
+    height: 290px;
     flex-shrink: 0;
   }
   .book-cover-img {
@@ -301,6 +301,7 @@ const jsonLd = [
     height: 100%;
     object-fit: cover;
     border: 1px solid rgba(200,160,80,0.3);
+    border-radius: 3px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2);
   }
   .book-cover-fallback {
@@ -368,17 +369,29 @@ const jsonLd = [
       gap: 24px;
     }
     .book-cover-wrapper {
-      width: 140px;
-      min-width: 140px;
-      height: 200px;
+      width: 150px;
+      min-width: 150px;
+      height: 218px;
     }
     .book-facts {
       width: 100%;
       max-width: 100%;
+      min-width: 0;
       border-left: none;
       padding-left: 0;
       border-top: 1px solid var(--border, rgba(200, 160, 80, 0.1));
       padding-top: 20px;
+      max-height: none;
+      overflow-y: visible;
+    }
+    .fun-facts-heading {
+      position: static;
+      background: none;
+    }
+    .fun-facts-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
     }
     .reader-section {
       padding: 28px 12px 40px;
@@ -393,48 +406,62 @@ const jsonLd = [
       min-width: 120px;
       height: 175px;
     }
+    .fun-facts-list {
+      grid-template-columns: 1fr;
+    }
     .reader-section {
       padding: 20px 8px 32px;
-    }
-    .fun-fact-icon {
-      width: 26px;
-      height: 26px;
-    }
-    .fun-fact-icon svg {
-      width: 14px;
-      height: 14px;
     }
   }
 
   /* --- Did You Know? (third column) --- */
   .book-facts {
-    width: 280px;
-    min-width: 240px;
-    max-width: 300px;
+    width: 240px;
+    min-width: 200px;
+    max-width: 260px;
     flex-shrink: 0;
     border-left: 1px solid var(--border, rgba(200, 160, 80, 0.1));
-    padding-left: 28px;
+    padding-left: 24px;
+    max-height: 290px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(200, 160, 80, 0.2) transparent;
+  }
+  .book-facts::-webkit-scrollbar {
+    width: 4px;
+  }
+  .book-facts::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .book-facts::-webkit-scrollbar-thumb {
+    background: rgba(200, 160, 80, 0.2);
+    border-radius: 4px;
   }
   .fun-facts-heading {
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--gold);
-    margin-bottom: 14px;
+    margin-bottom: 10px;
+    position: sticky;
+    top: 0;
+    background: var(--bg, #1a1510);
+    padding-bottom: 4px;
+    z-index: 1;
   }
   .fun-facts-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 7px;
   }
   .fun-fact-card {
     display: flex;
     align-items: flex-start;
-    gap: 10px;
-    padding: 10px 12px;
+    gap: 8px;
+    padding: 7px 9px;
     background: var(--card-bg, rgba(30, 25, 18, 0.6));
     border: 1px solid var(--border, rgba(200, 160, 80, 0.1));
-    border-radius: 5px;
+    border-radius: 4px;
     transition: border-color 0.25s ease, background 0.25s ease;
   }
   .fun-fact-card:hover {
@@ -443,8 +470,8 @@ const jsonLd = [
   }
   .fun-fact-icon {
     flex-shrink: 0;
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -452,20 +479,24 @@ const jsonLd = [
     background: rgba(200, 160, 80, 0.08);
     color: var(--gold-dim, #b8a472);
   }
+  .fun-fact-icon svg {
+    width: 14px;
+    height: 14px;
+  }
   .fun-fact-content {
     flex: 1;
     min-width: 0;
   }
   .fun-fact-tag {
     display: inline-block;
-    font-size: 0.58rem;
-    letter-spacing: 0.12em;
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--gold, #c8a050);
     background: rgba(200, 160, 80, 0.1);
-    padding: 1px 6px;
+    padding: 1px 5px;
     border-radius: 3px;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
   }
   /* category accent colors */
   .fun-fact-film .fun-fact-tag { color: #e0a0c0; background: rgba(224, 160, 192, 0.1); }
@@ -479,9 +510,9 @@ const jsonLd = [
   .fun-fact-history .fun-fact-tag { color: #c8b090; background: rgba(200, 176, 144, 0.1); }
   .fun-fact-history .fun-fact-icon { color: #c8b090; background: rgba(200, 176, 144, 0.08); }
   .fun-fact-text {
-    font-size: 0.78rem;
+    font-size: 0.73rem;
     color: var(--text-dim, #a89878);
-    line-height: 1.6;
+    line-height: 1.5;
     margin: 0;
   }
 </style>
