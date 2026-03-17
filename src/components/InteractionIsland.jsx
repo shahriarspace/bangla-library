@@ -73,17 +73,26 @@ export default function InteractionIsland({
     return GISCUS_THEME_MAP[siteTheme] || 'dark';
   }
 
-  // Helper: send theme to Giscus iframe (returns true if sent)
+  // Helper: send theme to Giscus iframe via postMessage + src fallback
   function sendGiscusTheme(theme) {
     const iframe = document.querySelector('iframe.giscus-frame');
-    if (iframe) {
-      iframe.contentWindow.postMessage(
-        { giscus: { setConfig: { theme } } },
-        'https://giscus.app'
-      );
-      return true;
-    }
-    return false;
+    if (!iframe) return false;
+
+    // Primary: postMessage (instant, no reload)
+    iframe.contentWindow.postMessage(
+      { giscus: { setConfig: { theme } } },
+      'https://giscus.app'
+    );
+
+    // Fallback: update iframe src parameter (reliable, causes reload)
+    // This ensures the theme changes even if postMessage is ignored
+    try {
+      const url = new URL(iframe.src);
+      url.searchParams.set('theme', theme);
+      iframe.src = url.toString();
+    } catch {}
+
+    return true;
   }
 
   // Listen for Giscus messages (metadata / reaction counts + theme sync)
