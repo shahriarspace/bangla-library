@@ -31,7 +31,8 @@ const MODES = [
 const MOBILE_TOGGLES = [
   { id: 'bn', label: 'বাংলা' },
   { id: 'en', label: 'English' },
-  { id: 'both', label: 'Both \u2194' },
+  { id: 'both', label: 'Both' },
+  { id: 'side', label: 'Side ↔' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -431,8 +432,8 @@ function ParagraphWrapper({ paragraphId, isMobile, children, onOpenFeedback, par
 function Toolbar({ mode, setMode, fontSize, setFontSize, page, totalPages, setPage, showPageNav, isMobile, isMobileReader }) {
   // On very small screens (<=640px), show simplified toggle bar
   if (isMobileReader) {
-    // Map 'book' to 'both' for the mobile toggle
-    const mobileMode = (mode === 'book' || mode === 'side' || mode === 'paginated') ? 'both' : mode;
+    // Map 'book'/'paginated' to 'both' for the mobile toggle; keep 'side' separate
+    const mobileMode = (mode === 'book' || mode === 'paginated') ? 'both' : mode;
 
     return (
       <div style={{
@@ -454,6 +455,7 @@ function Toolbar({ mode, setMode, fontSize, setFontSize, page, totalPages, setPa
               key={t.id}
               onClick={() => {
                 if (t.id === 'both') setMode('book');
+                else if (t.id === 'side') setMode('side');
                 else setMode(t.id);
               }}
               style={{
@@ -1246,8 +1248,8 @@ export default function BilingualReader({ book, base = '', workerUrl = '' }) {
     return () => window.removeEventListener('scroll', onScroll);
   }, [mode, page, totalPages]);
 
-  // Determine if "Both" mode on mobile should show stacked vertically
-  const showMobileBoth = isMobileReader && (mode === 'book' || mode === 'side' || mode === 'paginated');
+  // Determine if "Both" mode on mobile should show stacked vertically (not for 'side' — that uses SideMode grid)
+  const showMobileBoth = isMobileReader && (mode === 'book' || mode === 'paginated');
 
   return (
     <div style={{ fontFamily: 'var(--font-en)', overflowX: 'hidden', maxWidth: '100%' }}>
