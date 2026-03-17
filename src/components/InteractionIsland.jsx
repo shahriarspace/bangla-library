@@ -57,6 +57,7 @@ export default function InteractionIsland({
   // --- Giscus ---
   const giscusRef = useRef(null);
   const giscusLoaded = useRef(false);
+  const pendingGiscusTheme = useRef(null);
 
   // Check localStorage for liked state
   useEffect(() => {
@@ -66,21 +67,51 @@ export default function InteractionIsland({
     } catch {}
   }, [slug]);
 
-  // Listen for Giscus metadata (reaction counts)
+  // Helper: get the Giscus theme for the current site theme
+  function getGiscusTheme() {
+    const siteTheme = document.documentElement.getAttribute('data-theme') || 'antique-gold';
+    return GISCUS_THEME_MAP[siteTheme] || 'dark';
+  }
+
+  // Helper: send theme to Giscus iframe (returns true if sent)
+  function sendGiscusTheme(theme) {
+    const iframe = document.querySelector('iframe.giscus-frame');
+    if (iframe) {
+      iframe.contentWindow.postMessage(
+        { giscus: { setConfig: { theme } } },
+        'https://giscus.app'
+      );
+      return true;
+    }
+    return false;
+  }
+
+  // Listen for Giscus messages (metadata / reaction counts + theme sync)
   useEffect(() => {
     function handleMessage(event) {
       if (event.origin !== 'https://giscus.app') return;
       const data = event.data;
-      if (!data?.giscus?.discussion) return;
-      const total = data.giscus.discussion.totalReactionCount;
-      if (typeof total === 'number') {
-        setLikes(prev => {
-          if (prev !== null && total > prev) {
-            setLikeAnimate(true);
-            setTimeout(() => setLikeAnimate(false), 600);
-          }
-          return total;
-        });
+      if (!data?.giscus) return;
+
+      // When Giscus iframe signals it's ready, apply any pending theme
+      if (pendingGiscusTheme.current) {
+        const theme = pendingGiscusTheme.current;
+        pendingGiscusTheme.current = null;
+        sendGiscusTheme(theme);
+      }
+
+      // Handle reaction count metadata
+      if (data.giscus.discussion) {
+        const total = data.giscus.discussion.totalReactionCount;
+        if (typeof total === 'number') {
+          setLikes(prev => {
+            if (prev !== null && total > prev) {
+              setLikeAnimate(true);
+              setTimeout(() => setLikeAnimate(false), 600);
+            }
+            return total;
+          });
+        }
       }
     }
     window.addEventListener('message', handleMessage);
@@ -91,11 +122,6 @@ export default function InteractionIsland({
   useEffect(() => {
     if (giscusLoaded.current || !giscusRef.current) return;
     giscusLoaded.current = true;
-
-    function getGiscusTheme() {
-      const siteTheme = document.documentElement.getAttribute('data-theme') || 'antique-gold';
-      return GISCUS_THEME_MAP[siteTheme] || 'dark';
-    }
 
     const script = document.createElement('script');
     script.src = 'https://giscus.app/client.js';
@@ -116,16 +142,14 @@ export default function InteractionIsland({
     script.async = true;
     giscusRef.current.appendChild(script);
 
-    // Sync theme on changes
+    // Sync theme when site theme changes
     const observer = new MutationObserver((mutations) => {
       for (const m of mutations) {
         if (m.attributeName === 'data-theme') {
-          const iframe = document.querySelector('iframe.giscus-frame');
-          if (iframe) {
-            iframe.contentWindow.postMessage(
-              { giscus: { setConfig: { theme: getGiscusTheme() } } },
-              'https://giscus.app'
-            );
+          const theme = getGiscusTheme();
+          if (!sendGiscusTheme(theme)) {
+            // Iframe not yet loaded (lazy loading) — save for when it appears
+            pendingGiscusTheme.current = theme;
           }
         }
       }
