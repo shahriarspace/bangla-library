@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import { getCollection } from 'astro:content';
 import FeaturedSection from '../components/FeaturedSection.jsx';
+import FallbackCover from '../components/FallbackCover.jsx';
 
 const allBooks = await getCollection('books', ({ data }) => data.status === 'published');
 const base = import.meta.env.BASE_URL;
@@ -132,6 +133,13 @@ const jsonLd = {
             <div class="book-grid">
               {catBooks.map(book => (
                 <a href={`${base}/books/${book.id}`} class="book-card">
+                  <div class="card-cover">
+                    {book.data.cover_image ? (
+                      <img src={book.data.cover_image} alt={`Cover of ${book.data.title_en}`} class="card-cover-img" loading="lazy" />
+                    ) : (
+                      <FallbackCover title_bn={book.data.title_bn} title_en={book.data.title_en} author_en={book.data.author_en} year={book.data.year} />
+                    )}
+                  </div>
                   <div style="font-size:1.3rem;font-family:var(--font-bn);color:var(--gold-light);margin-bottom:4px;">{book.data.title_bn}</div>
                   <div style="font-size:0.9rem;color:var(--gold);margin-bottom:12px;font-style:italic;">{book.data.title_en}</div>
                   <div style="font-size:0.78rem;color:var(--text-dim);">
@@ -211,6 +219,18 @@ const jsonLd = {
     background: var(--bg-panel);
     transition: all 0.25s;
     text-decoration: none;
+  }
+  .card-cover {
+    width: 100%;
+    height: 200px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(200,160,80,0.15);
+  }
+  .card-cover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
   .book-card:hover {
     border-color: var(--card-hover-border) !important;
