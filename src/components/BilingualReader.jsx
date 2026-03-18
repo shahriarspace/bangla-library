@@ -872,42 +872,11 @@ function SideMode({ paragraphs, activeId, setActiveId, fontSize, containerRef, i
 
   return (
     <div ref={containerRef} style={{
-      border: '1px solid var(--border)',
-      borderRadius: '4px',
-      overflow: 'hidden',
       maxWidth: '100%',
+      padding: isMobile ? '0' : '0 8px',
     }}>
-      {/* Column headers */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: '1px',
-        background: 'var(--border)',
-      }}>
-        <div style={{
-          background: 'var(--bg)',
-          padding: isMobile ? '8px 6px' : '14px 24px',
-          fontSize: isMobile ? '0.55rem' : '0.6rem',
-          letterSpacing: '0.15em', color: 'var(--gold)',
-          textAlign: 'center', opacity: 0.6,
-          textTransform: 'uppercase',
-        }}>
-          {isMobile ? 'Bengali' : 'Bengali Original'}
-        </div>
-        <div style={{
-          background: 'var(--bg)',
-          padding: isMobile ? '8px 6px' : '14px 24px',
-          fontSize: isMobile ? '0.55rem' : '0.6rem',
-          letterSpacing: '0.15em', color: 'var(--gold)',
-          textAlign: 'center', opacity: 0.6,
-          textTransform: 'uppercase',
-        }}>
-          {isMobile ? 'English' : 'English Translation'}
-        </div>
-      </div>
-
-      {/* Paragraph rows — each row is a 2-column grid so Bengali and English stay aligned */}
-      {paragraphs.map(p => (
+      {/* Paragraph rows — each row is a 2-column layout with a subtle gutter */}
+      {paragraphs.map((p, idx) => (
         <div
           key={p.id}
           id={`p${p.id}`}
@@ -915,38 +884,43 @@ function SideMode({ paragraphs, activeId, setActiveId, fontSize, containerRef, i
           onClick={() => handleClick(p.id)}
           style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '1px',
-            background: 'var(--border)',
+            gridTemplateColumns: '1fr auto 1fr',
             cursor: 'pointer',
-            borderBottom: '1px solid var(--border)',
+            padding: isMobile ? '12px 4px' : '18px 0',
+            borderRadius: '4px',
+            background: activeId === p.id ? 'var(--highlight)' : 'transparent',
+            transition: 'background 0.2s',
           }}
         >
           {/* Bengali cell */}
           <div style={{
-            padding: isMobile ? '8px 6px' : '16px 14px',
-            background: activeId === p.id ? 'var(--highlight)' : 'var(--bg)',
-            borderLeft: activeId === p.id ? '2px solid var(--border-active)' : '2px solid transparent',
-            transition: 'all 0.15s',
+            padding: isMobile ? '0 6px' : '0 20px 0 14px',
             fontSize: isMobile ? mobileBnSize : FONT_SIZES[fontSize].bn,
             fontFamily: 'var(--font-bn)',
             lineHeight: isMobile ? '1.8' : '2.1',
             color: activeId === p.id ? 'var(--text-active)' : 'var(--text-bn)',
+            transition: 'color 0.2s',
             wordBreak: 'break-word',
           }}>
             {p.bn}
           </div>
+          {/* Vertical gutter — book spine */}
+          <div style={{
+            width: '1px',
+            background: 'var(--border)',
+            opacity: 0.5,
+            alignSelf: 'stretch',
+          }} />
           {/* English cell */}
           <div style={{
-            padding: isMobile ? '8px 6px' : '16px 14px',
-            background: activeId === p.id ? 'var(--highlight)' : 'var(--bg)',
-            borderLeft: activeId === p.id ? '2px solid var(--border-active)' : '2px solid transparent',
-            transition: 'all 0.15s',
+            padding: isMobile ? '0 6px' : '0 14px 0 20px',
             fontSize: isMobile ? mobileEnSize : FONT_SIZES[fontSize].en,
             fontFamily: 'var(--font-en)',
             fontStyle: 'italic',
             lineHeight: isMobile ? '1.6' : '1.9',
             color: activeId === p.id ? 'var(--text-active)' : 'var(--text-en)',
+            opacity: activeId === p.id ? 1 : 0.8,
+            transition: 'all 0.2s',
             wordBreak: 'break-word',
           }}>
             {p.en}
