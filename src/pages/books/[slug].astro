@@ -278,7 +278,7 @@ const jsonLd = [
     border-bottom: 1px solid var(--border);
     text-align: center;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
   }
   .book-header-layout {
     display: flex;
@@ -316,6 +316,7 @@ const jsonLd = [
     position: absolute; inset: 0;
     background: radial-gradient(ellipse at center top, var(--card-hover-bg) 0%, transparent 65%);
     pointer-events: none;
+    overflow: hidden;
   }
   .back-link {
     font-size: 0.8rem;
@@ -420,9 +421,9 @@ const jsonLd = [
     min-width: 200px;
     max-width: 260px;
     flex-shrink: 0;
+    align-self: stretch;
     border-left: 1px solid var(--border, rgba(200, 160, 80, 0.1));
     padding-left: 24px;
-    max-height: 290px;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: rgba(200, 160, 80, 0.2) transparent;
