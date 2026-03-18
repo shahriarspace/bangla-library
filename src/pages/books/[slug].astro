@@ -380,7 +380,7 @@ const jsonLd = [
       min-width: 0;
       border-left: none;
       padding-left: 0;
-      border-top: 1px solid var(--border, rgba(200, 160, 80, 0.1));
+      border-top: 1px solid var(--border);
       padding-top: 20px;
       max-height: none;
       overflow-y: visible;
@@ -421,12 +421,12 @@ const jsonLd = [
     min-width: 200px;
     max-width: 260px;
     flex-shrink: 0;
-    border-left: 1px solid var(--border, rgba(200, 160, 80, 0.1));
+    border-left: 1px solid var(--border);
     padding-left: 24px;
     max-height: 400px;
     overflow-y: auto;
     scrollbar-width: thin;
-    scrollbar-color: rgba(200, 160, 80, 0.2) transparent;
+    scrollbar-color: var(--scrollbar-thumb, rgba(200, 160, 80, 0.2)) transparent;
   }
   .book-facts::-webkit-scrollbar {
     width: 4px;
@@ -435,7 +435,7 @@ const jsonLd = [
     background: transparent;
   }
   .book-facts::-webkit-scrollbar-thumb {
-    background: rgba(200, 160, 80, 0.2);
+    background: var(--scrollbar-thumb, rgba(200, 160, 80, 0.2));
     border-radius: 4px;
   }
   .fun-facts-heading {
@@ -460,14 +460,14 @@ const jsonLd = [
     align-items: flex-start;
     gap: 8px;
     padding: 7px 9px;
-    background: var(--card-bg, rgba(30, 25, 18, 0.6));
-    border: 1px solid var(--border, rgba(200, 160, 80, 0.1));
+    background: var(--card-bg);
+    border: 1px solid var(--border);
     border-radius: 4px;
     transition: border-color 0.25s ease, background 0.25s ease;
   }
   .fun-fact-card:hover {
-    border-color: rgba(200, 160, 80, 0.25);
-    background: var(--card-hover-bg, rgba(40, 34, 24, 0.7));
+    border-color: var(--card-hover-border);
+    background: var(--card-hover-bg);
   }
   .fun-fact-icon {
     flex-shrink: 0;
@@ -477,8 +477,8 @@ const jsonLd = [
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    background: rgba(200, 160, 80, 0.08);
-    color: var(--gold-dim, #b8a472);
+    background: var(--highlight);
+    color: var(--gold-dim);
   }
   .fun-fact-icon svg {
     width: 14px;
@@ -493,26 +493,26 @@ const jsonLd = [
     font-size: 0.55rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--gold, #c8a050);
-    background: rgba(200, 160, 80, 0.1);
+    color: var(--gold);
+    background: var(--highlight);
     padding: 1px 5px;
     border-radius: 3px;
     margin-bottom: 3px;
   }
   /* category accent colors */
-  .fun-fact-film .fun-fact-tag { color: #e0a0c0; background: rgba(224, 160, 192, 0.1); }
-  .fun-fact-film .fun-fact-icon { color: #e0a0c0; background: rgba(224, 160, 192, 0.08); }
-  .fun-fact-award .fun-fact-tag { color: #d4af37; background: rgba(212, 175, 55, 0.1); }
-  .fun-fact-award .fun-fact-icon { color: #d4af37; background: rgba(212, 175, 55, 0.08); }
-  .fun-fact-music .fun-fact-tag { color: #a0c8e0; background: rgba(160, 200, 224, 0.1); }
-  .fun-fact-music .fun-fact-icon { color: #a0c8e0; background: rgba(160, 200, 224, 0.08); }
-  .fun-fact-cultural .fun-fact-tag { color: #a0d8a0; background: rgba(160, 216, 160, 0.1); }
-  .fun-fact-cultural .fun-fact-icon { color: #a0d8a0; background: rgba(160, 216, 160, 0.08); }
-  .fun-fact-history .fun-fact-tag { color: #c8b090; background: rgba(200, 176, 144, 0.1); }
-  .fun-fact-history .fun-fact-icon { color: #c8b090; background: rgba(200, 176, 144, 0.08); }
+  .fun-fact-film .fun-fact-tag { color: #e0a0c0; background: rgba(224, 160, 192, 0.12); }
+  .fun-fact-film .fun-fact-icon { color: #e0a0c0; background: rgba(224, 160, 192, 0.10); }
+  .fun-fact-award .fun-fact-tag { color: #d4af37; background: rgba(212, 175, 55, 0.12); }
+  .fun-fact-award .fun-fact-icon { color: #d4af37; background: rgba(212, 175, 55, 0.10); }
+  .fun-fact-music .fun-fact-tag { color: #a0c8e0; background: rgba(160, 200, 224, 0.12); }
+  .fun-fact-music .fun-fact-icon { color: #a0c8e0; background: rgba(160, 200, 224, 0.10); }
+  .fun-fact-cultural .fun-fact-tag { color: #a0d8a0; background: rgba(160, 216, 160, 0.12); }
+  .fun-fact-cultural .fun-fact-icon { color: #a0d8a0; background: rgba(160, 216, 160, 0.10); }
+  .fun-fact-history .fun-fact-tag { color: #c8b090; background: rgba(200, 176, 144, 0.12); }
+  .fun-fact-history .fun-fact-icon { color: #c8b090; background: rgba(200, 176, 144, 0.10); }
   .fun-fact-text {
     font-size: 0.73rem;
-    color: var(--text-dim, #a89878);
+    color: var(--text-dim);
     line-height: 1.5;
     margin: 0;
   }
